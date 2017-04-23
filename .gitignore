@@ -1,0 +1,5 @@
+.DS_Store
+.vscode
+*.ibc
+/main.sh
+/src/main
