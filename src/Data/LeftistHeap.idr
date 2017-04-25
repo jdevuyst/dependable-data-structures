@@ -7,7 +7,7 @@ import Decidable.Order
 
 mutual
   export
-  data Heap : (constraint : Ordered a rel) -> .(count : Nat) -> Type where
+  data Heap : .(constraint : Ordered a rel) -> .(count : Nat) -> Type where
        Empty : Heap _ Z
        Node : (n : Nat)
            -> (value : a)
@@ -51,11 +51,11 @@ makeFit : {constraint : Ordered a rel}
        -> .{auto fits1 : Fits value h1}
        -> .{auto fits2 : Fits value h2}
        -> .{auto relPrf : rel fitsValue value}
-       -> (ret : Heap constraint (S $ count1 + count2) ** Fits fitsValue ret)
+       -> Subset (Heap constraint (S $ count1 + count2)) (Fits fitsValue)
 makeFit {count1} {count2} {relPrf} fitsValue value h1 h2 with (order {to = LTE} (rank h1) (rank h2))
   | (Left _) = rewrite plusCommutative count1 count2 in
-               (Node _ value h2 h1 ** FitsNode {prf = relPrf} _ _)
-  | (Right _) = (Node _ value h1 h2 ** FitsNode {prf = relPrf} _ _)
+               Element (Node _ value h2 h1) (FitsNode {prf = relPrf} _ _)
+  | (Right _) = Element (Node _ value h1 h2) (FitsNode {prf = relPrf} _ _)
 
 partial
 mergeHelper : {constraint : Ordered a rel}
@@ -64,21 +64,21 @@ mergeHelper : {constraint : Ordered a rel}
            -> (h2 : Heap constraint count2)
            -> .{auto fits1 : Fits value h1}
            -> .{auto fits2 : Fits value h2}
-           -> (ret : Heap constraint (count1 + count2) ** Fits value ret)
-mergeHelper Empty Empty = (Empty ** FitsEmpty _ _)
-mergeHelper {fits1} h@(Node {countLeft} {countRight} n _ _ _) Empty = rewrite plusZeroRightNeutral (countLeft + countRight) in (h ** fits1)
-mergeHelper {fits2} Empty h@(Node {countLeft} {countRight} n _ _ _) = (h ** fits2)
+           -> Subset (Heap constraint (count1 + count2)) (Fits value)
+mergeHelper Empty Empty = Element Empty (FitsEmpty _ _)
+mergeHelper {fits1} h@(Node {countLeft} {countRight} n _ _ _) Empty = rewrite plusZeroRightNeutral (countLeft + countRight) in Element h fits1
+mergeHelper {fits2} Empty h@(Node {countLeft} {countRight} n _ _ _) = Element h fits2
 mergeHelper {value} {rel} {fits1} {fits2}
             (Node {countLeft = countLeft1} {countRight = countRight1} {fitsLeft = fitsLeft1} {fitsRight = fitsRight1} _ value1 left1 right1)
             (Node {countLeft = countLeft2} {countRight = countRight2} {fitsLeft = fitsLeft2} {fitsRight = fitsRight2} _ value2 left2 right2)
   = case order {to = rel} value1 value2 of
     Left orderPrf => rewrite sym $ plusAssociative countLeft1 countRight1 (S $ countLeft2 + countRight2) in
-                     let (mergedHeap ** fitsMergedHeap) = mergeHelper {value = value1} {fits1 = fitsRight1} {fits2 = FitsNode {prf = orderPrf} _ _} right1 (Node _ value2 left2 right2) in
+                     let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value1} {fits1 = fitsRight1} {fits2 = FitsNode {prf = orderPrf} _ _} right1 (Node _ value2 left2 right2) in
                      makeFit {fits1 = fitsLeft1} {fits2 = fitsMergedHeap} {relPrf = fitsPrf fits1} value value1 left1 mergedHeap 
     Right orderPrf => rewrite sym $ plusSuccRightSucc (countLeft1 + countRight1) (countLeft2 + countRight2) in
                       rewrite plusCommutative countLeft2 countRight2 in
                       rewrite plusAssociative (countLeft1 + countRight1) countRight2 countLeft2 in
-                      let (mergedHeap ** fitsMergedHeap) = mergeHelper {value = value2} {fits1 = FitsNode {prf = orderPrf} _ _} {fits2 = fitsRight2} (Node _ value1 left1 right1) right2 in
+                      let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value2} {fits1 = FitsNode {prf = orderPrf} _ _} {fits2 = fitsRight2} (Node _ value1 left1 right1) right2 in
                       makeFit {fits1 = fitsMergedHeap} {fits2 = fitsLeft2} {relPrf = fitsPrf fits2} value value2 mergedHeap left2
 
 export
@@ -89,8 +89,10 @@ merge {count1} h Empty = rewrite plusZeroRightNeutral count1 in h
 merge Empty h = h
 merge {count1 = S _} {count2 = S _} h1 h2
   = assert_total $ case order {to = rel} (findMin h1) (findMin h2) of
-    Left orderPrf => fst $ mergeHelper {value = (findMin h1)} h1 h2 {fits1 = FitsNode {prf = reflexive (findMin h1)} _ _} {fits2 = FitsNode {prf = orderPrf} _ _}
-    Right orderPrf => fst $ mergeHelper {value = (findMin h2)} h1 h2 {fits1 = FitsNode {prf = orderPrf} _ _} {fits2 = FitsNode {prf = reflexive (findMin h2)} _ _}
+    Left orderPrf => case mergeHelper {value = (findMin h1)} h1 h2 {fits1 = FitsNode {prf = reflexive (findMin h1)} _ _} {fits2 = FitsNode {prf = orderPrf} _ _} of
+                     Element h _ => h
+    Right orderPrf => case mergeHelper {value = (findMin h2)} h1 h2 {fits1 = FitsNode {prf = orderPrf} _ _} {fits2 = FitsNode {prf = reflexive (findMin h2)} _ _} of
+                      Element h _ => h
 
 export
 insert : {constraint : Ordered a _} -> a -> Heap constraint n -> Heap constraint (S n)
