@@ -48,9 +48,9 @@ makeFit : {constraint : Ordered a rel}
        -> (value : a)
        -> (h1 : Heap constraint count1)
        -> (h2 : Heap constraint count2)
-       -> .{auto fits1 : Fits value h1}
-       -> .{auto fits2 : Fits value h2}
-       -> .{auto relPrf : rel fitsValue value}
+       -> .{fits1 : Fits value h1}
+       -> .{fits2 : Fits value h2}
+       -> .{relPrf : rel fitsValue value}
        -> Subset (Heap constraint (S $ count1 + count2)) (Fits fitsValue)
 makeFit {count1} {count2} {relPrf} fitsValue value h1 h2 with (order {to = LTE} (rank h1) (rank h2))
   | (Left _) = rewrite plusCommutative count1 count2 in
@@ -62,8 +62,8 @@ mergeHelper : {constraint : Ordered a rel}
            -> {value : a}
            -> (h1 : Heap constraint count1)
            -> (h2 : Heap constraint count2)
-           -> .{auto fits1 : Fits value h1}
-           -> .{auto fits2 : Fits value h2}
+           -> .{fits1 : Fits value h1}
+           -> .{fits2 : Fits value h2}
            -> Subset (Heap constraint (count1 + count2)) (Fits value)
 mergeHelper Empty Empty = Element Empty (FitsEmpty _ _)
 mergeHelper {fits1} h@(Node {countLeft} {countRight} n _ _ _) Empty = rewrite plusZeroRightNeutral (countLeft + countRight) in Element h fits1
@@ -87,7 +87,7 @@ merge : {constraint : Ordered a rel} -> (h1 : Heap constraint count1) -> (h2 : H
 merge Empty Empty = Empty
 merge {count1} h Empty = rewrite plusZeroRightNeutral count1 in h
 merge Empty h = h
-merge {count1 = S _} {count2 = S _} h1 h2
+merge h1@(Node _ _ _ _) h2@(Node _ _ _ _)
   = assert_total $ case order {to = rel} (findMin h1) (findMin h2) of
     Left orderPrf => case mergeHelper {value = (findMin h1)} h1 h2 {fits1 = FitsNode {prf = reflexive (findMin h1)} _ _} {fits2 = FitsNode {prf = orderPrf} _ _} of
                      Element h _ => h
