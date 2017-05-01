@@ -44,7 +44,7 @@ fitsPrf : Fits {rel} value (Node {rankPrf} {leftistPrf} {fitsLeft} {fitsRight} _
 fitsPrf (FitsNode {rel} value (Node {rankPrf} {leftistPrf} {fitsLeft} {fitsRight} _ value1 _ _) {prf}) = prf
 
 makeFit : {constraint : Ordered a rel}
-       -> (fitsValue : a)
+       -> .(fitsValue : a)
        -> (value : a)
        -> (h1 : Heap constraint count1)
        -> (h2 : Heap constraint count2)
@@ -82,7 +82,9 @@ mergeHelper {value} {rel} {fits1} {fits2}
                       makeFit {fits1 = fitsMergedHeap} {fits2 = fitsLeft2} {relPrf = fitsPrf fits2} value value2 mergedHeap left2
 
 export
-merge : {constraint : Ordered a rel} -> (h1 : Heap constraint count1) -> (h2 : Heap constraint count2)
+merge : {constraint : Ordered a rel} 
+     -> {count1 : Nat} -> {count2 : Nat}
+     -> (h1 : Heap constraint count1) -> (h2 : Heap constraint count2)
      -> Heap constraint (count1 + count2)
 merge Empty Empty = Empty
 merge {count1} h Empty = rewrite plusZeroRightNeutral count1 in h
@@ -95,11 +97,11 @@ merge h1@(Node _ _ _ _) h2@(Node _ _ _ _)
                       Element h _ => h
 
 export
-insert : {constraint : Ordered a _} -> a -> Heap constraint n -> Heap constraint (S n)
+insert : {constraint : Ordered a _} -> {n : Nat} -> a -> Heap constraint n -> Heap constraint (S n)
 insert value heap = merge (Node 1 value Empty Empty) heap
 
 export
-deleteMin : {constraint : Ordered a _} -> Heap constraint (S n) -> Heap constraint n
+deleteMin : {constraint : Ordered a _} -> {n : Nat} -> Heap constraint (S n) -> Heap constraint n
 deleteMin (Node _ _ left right) = merge left right
 
 export
