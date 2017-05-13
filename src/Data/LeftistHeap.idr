@@ -1,6 +1,5 @@
 module Data.LeftistHeap
 
-import Decidable.Equality
 import Decidable.Order
 
 %default total
@@ -32,7 +31,7 @@ mutual
   rank (Node _ _ _ right) = S $ rank right
 
   export
-  findMin : {constraint : Ordered a _} -> Heap constraint (S _) -> a
+  findMin : .{constraint : Ordered a _} -> Heap constraint (S _) -> a
   findMin (Node _ value _ _) = value
 
 export
@@ -43,7 +42,7 @@ fitsPrf : Fits {rel} value (Node {rankPrf} {leftistPrf} {fitsLeft} {fitsRight} _
        -> rel value value1
 fitsPrf (FitsNode {rel} value (Node {rankPrf} {leftistPrf} {fitsLeft} {fitsRight} _ value1 _ _) {prf}) = prf
 
-makeFit : {constraint : Ordered a rel}
+makeFit : .{constraint : Ordered a rel}
        -> .(fitsValue : a)
        -> (value : a)
        -> (h1 : Heap constraint count1)
@@ -58,8 +57,8 @@ makeFit {count1} {count2} {relPrf} fitsValue value h1 h2 with (order {to = LTE} 
   | (Right _) = Element (Node _ value h1 h2) (FitsNode {prf = relPrf} _ _)
 
 partial
-mergeHelper : {constraint : Ordered a rel}
-           -> {value : a}
+mergeHelper : .{constraint : Ordered a rel}
+           -> .{value : a}
            -> (h1 : Heap constraint count1)
            -> (h2 : Heap constraint count2)
            -> .{fits1 : Fits value h1}
@@ -82,8 +81,8 @@ mergeHelper {value} {rel} {fits1} {fits2}
                       makeFit {fits1 = fitsMergedHeap} {fits2 = fitsLeft2} {relPrf = fitsPrf fits2} value value2 mergedHeap left2
 
 export
-merge : {constraint : Ordered a rel} 
-     -> {count1 : Nat} -> {count2 : Nat}
+merge : .{constraint : Ordered a rel} 
+     -> .{count1 : Nat} -> .{count2 : Nat}
      -> (h1 : Heap constraint count1) -> (h2 : Heap constraint count2)
      -> Heap constraint (count1 + count2)
 merge Empty Empty = Empty
@@ -97,14 +96,9 @@ merge h1@(Node _ _ _ _) h2@(Node _ _ _ _)
                       Element h _ => h
 
 export
-insert : {constraint : Ordered a _} -> {n : Nat} -> a -> Heap constraint n -> Heap constraint (S n)
+insert : .{constraint : Ordered a _} -> .{n : Nat} -> a -> Heap constraint n -> Heap constraint (S n)
 insert value heap = merge (Node 1 value Empty Empty) heap
 
 export
-deleteMin : {constraint : Ordered a _} -> {n : Nat} -> Heap constraint (S n) -> Heap constraint n
+deleteMin : .{constraint : Ordered a _} -> .{n : Nat} -> Heap constraint (S n) -> Heap constraint n
 deleteMin (Node _ _ left right) = merge left right
-
-export
-count : Heap _ _ -> Nat
-count Empty = Z
-count (Node _ _ left right) = S $ (count left) + (count right)
