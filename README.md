@@ -13,4 +13,8 @@ Using dependent types I was able to prove the following:
 
 Available operations: `findMin`, `merge`, `insert`, `deleteMin`.
 
-A supplementary `CountedLeftistHeap` data structure is also available. 
+A supplementary `CountedLeftistHeap` data structure is also available.
+
+## OrderedVect
+
+`OrderedVect` is a linked list type that is always sorted. The element count and order criteria are embedded in the type. There's also a `merge` operation that will merge two `OrderedVect`s.

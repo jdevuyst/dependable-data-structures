@@ -1,5 +1,5 @@
 package Data
 
 sourcedir = src
-modules = Data.LeftistHeap Data.CountedLeftistHeap
+modules = Data.LeftistHeap Data.CountedLeftistHeap Data.OrderedVect
 opts = "-p contrib"
