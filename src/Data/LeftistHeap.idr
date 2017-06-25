@@ -19,11 +19,11 @@ mutual
            -> Heap constraint (S $ countLeft + countRight)
 
   data Fits : {constraint : Ordered a rel} -> a -> Heap constraint _ -> Type where
-       FitsEmpty : {constraint : Ordered a rel} 
+       FitsEmpty : {constraint : Ordered a rel}
                 -> (x : a) -> (h : Heap constraint Z)
                 -> Fits x h
-       FitsNode : {constraint : Ordered a rel} 
-               -> (x : a) -> (h : Heap constraint (S _)) -> {prf : rel x (findMin h)} 
+       FitsNode : {constraint : Ordered a rel}
+               -> (x : a) -> (h : Heap constraint (S _)) -> {prf : rel x (findMin h)}
                -> Fits x h
 
   rank : Heap _ _ -> Nat
@@ -73,7 +73,7 @@ mergeHelper {value} {rel} {fits1} {fits2}
   = case order {to = rel} value1 value2 of
     Left orderPrf => rewrite sym $ plusAssociative countLeft1 countRight1 (S $ countLeft2 + countRight2) in
                      let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value1} {fits1 = fitsRight1} {fits2 = FitsNode {prf = orderPrf} _ _} right1 (Node _ value2 left2 right2) in
-                     makeFit {fits1 = fitsLeft1} {fits2 = fitsMergedHeap} {relPrf = fitsPrf fits1} value value1 left1 mergedHeap 
+                     makeFit {fits1 = fitsLeft1} {fits2 = fitsMergedHeap} {relPrf = fitsPrf fits1} value value1 left1 mergedHeap
     Right orderPrf => rewrite sym $ plusSuccRightSucc (countLeft1 + countRight1) (countLeft2 + countRight2) in
                       rewrite plusCommutative countLeft2 countRight2 in
                       rewrite plusAssociative (countLeft1 + countRight1) countRight2 countLeft2 in
@@ -81,7 +81,7 @@ mergeHelper {value} {rel} {fits1} {fits2}
                       makeFit {fits1 = fitsMergedHeap} {fits2 = fitsLeft2} {relPrf = fitsPrf fits2} value value2 mergedHeap left2
 
 export
-merge : .{constraint : Ordered a rel} 
+merge : .{constraint : Ordered a rel}
      -> .{count1 : Nat} -> .{count2 : Nat}
      -> (h1 : Heap constraint count1) -> (h2 : Heap constraint count2)
      -> Heap constraint (count1 + count2)

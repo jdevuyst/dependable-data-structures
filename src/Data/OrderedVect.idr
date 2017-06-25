@@ -32,6 +32,8 @@ mutual
             -> .{auto prf : to x (head v)}
             -> Fits x v
 
+%name OrderedVect xs,ys,zs
+
 fitsTrans : {constraint : Ordered ty to} -> (to x y) -> (Fits {constraint} y v) -> Fits {constraint} x v
 fitsTrans rel (FitsNil y v) = FitsNil x v
 fitsTrans {x} rel (FitsNext {prf} y v) = let prf = transitive x y (head v) rel prf in
@@ -95,19 +97,23 @@ mutual
                                (ret ** FitsNext x {prf = reflexive x} ret)
 
 export
-merge : .{constraint : Ordered ty to}
+merge : {constraint : Ordered ty to}
      -> (n : Nat)
-     -> (v1 : OrderedVect n constraint)
+     -> OrderedVect n constraint
      -> (m : Nat)
-     -> (v2 : OrderedVect m constraint)
+     -> OrderedVect m constraint
      -> OrderedVect (n + m) constraint
 merge Z     [] Z     [] = Nil
 merge n     v1 Z     [] = rewrite plusZeroRightNeutral n in v1
 merge Z     [] _     v2 = v2
-merge (S _) v1 (S _) v2
-  = case merge' v1 v2 of
-    (ret ** _) => ret
+merge (S _) v1 (S _) v2 = case merge' v1 v2 of
+                          (ret ** _) => ret
 
 export
 tail : OrderedVect (S n) constraint -> OrderedVect n constraint
 tail (_ :: v) = v
+
+export
+orderedVectToList : .{constraint : Ordered ty _} -> OrderedVect n constraint -> List ty
+orderedVectToList [] = []
+orderedVectToList {n = S _} (x :: xs) = x :: (orderedVectToList xs)
