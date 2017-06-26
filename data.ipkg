@@ -1,5 +1,5 @@
 package Data
 
 sourcedir = src
-modules = Data.LeftistHeap Data.CountedLeftistHeap Data.OrderedVect Data.MergeList
+modules = Decidable.IntOrder Data.LeftistHeap Data.CountedLeftistHeap Data.OrderedVect Data.MergeList
 opts = "-p contrib"

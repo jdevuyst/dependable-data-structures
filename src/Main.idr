@@ -1,9 +1,15 @@
 module Main
 
+-- contrib
+import Decidable.Order
+
+-- Fast really_believe_me implementation of Ordered for Int
+import Decidable.IntOrder
+
+-- data structures
 import Data.CountedLeftistHeap
 import Data.OrderedVect
 import Data.MergeList
-import Decidable.Order
 
 %default total
 
@@ -12,15 +18,12 @@ randoms : Int -> Stream Int
 randoms seed = let seed' = 1664525 * seed + 1013904223 in
                (seed' `shiftR` 2) :: randoms seed'
 
--- `cast` crashes on negative and on large numbers
--- large numbers slow down `Decidable.Order.order`
-partial
-int2nat : Int -> Nat
-int2nat i = cast $ abs $ mod i 100000
-
+-- Showcase basic operations on the various data structures in this module
+-- and verify that proofs are erased as expected:
+-- idris --warnreach -p contrib Main.idr -o main && time ./main
 main : IO ()
 main = do putStrLn "Start"
-          let l = take 100 $ map (assert_total int2nat) $ randoms 42
+          let l = take 10000 $ randoms 42
           let leftistHeap = foldl (flip insert) emptyHeap l
           let mergeList = foldl CountedMergeList.insert emptyMergeList l
           putStr "Results: "
@@ -30,12 +33,12 @@ main = do putStrLn "Start"
           putStrLn "End"
           pure ()
   where
-    emptyHeap : {auto constraint : Ordered Nat LTE} -> CountedHeap constraint
+    emptyHeap : {auto constraint : Ordered Int LTE} -> CountedHeap constraint
     emptyHeap = empty
-    emptyMergeList : {auto constraint : Ordered Nat LTE} -> CountedMergeList 1 constraint
+    emptyMergeList : {auto constraint : Ordered Int LTE} -> CountedMergeList 1 constraint
     emptyMergeList = empty
-    toVect : {constraint : Ordered Nat LTE} -> (cnt : Nat ** Lazy $ MergeList 1 cnt constraint) -> (cnt ** OrderedVect cnt constraint)
+    toVect : {constraint : Ordered Int LTE} -> (cnt : Nat ** Lazy $ MergeList 1 cnt constraint) -> (cnt ** OrderedVect cnt constraint)
     toVect (cnt ** xs) = (cnt ** mergeListToOrderedVect 1 cnt xs)
-    head : {constraint : Ordered Nat LTE} -> (cnt ** OrderedVect cnt constraint) -> Maybe Nat
+    head : {constraint : Ordered Int LTE} -> (cnt ** OrderedVect cnt constraint) -> Maybe Int
     head (Z ** Nil) = Nothing
     head (_ ** x::xs) = Just x
