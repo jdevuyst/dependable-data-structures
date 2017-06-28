@@ -10,7 +10,9 @@ mutual
        Empty : Heap _ Z
        Node : (n : Nat)
            -> (value : a)
+           -> {countLeft : Nat}
            -> (left : Heap constraint countLeft)
+           -> {countRight : Nat}
            -> (right : Heap constraint countRight)
            -> .{auto fitsLeft : Fits value left}
            -> .{auto fitsRight : Fits value right}
@@ -45,6 +47,8 @@ fitsPrf (FitsNode {rel} value (Node {rankPrf} {leftistPrf} {fitsLeft} {fitsRight
 makeFit : .{constraint : Ordered a rel}
        -> .(fitsValue : a)
        -> (value : a)
+       -> {count1 : Nat}
+       -> {count2 : Nat}
        -> (h1 : Heap constraint count1)
        -> (h2 : Heap constraint count2)
        -> .{fits1 : Fits value h1}
@@ -59,6 +63,8 @@ makeFit {count1} {count2} {relPrf} fitsValue value h1 h2 with (order {to = LTE} 
 partial
 mergeHelper : .{constraint : Ordered a rel}
            -> .{value : a}
+           -> {count1 : Nat}
+           -> {count2 : Nat}
            -> (h1 : Heap constraint count1)
            -> (h2 : Heap constraint count2)
            -> .{fits1 : Fits value h1}
@@ -82,7 +88,7 @@ mergeHelper {value} {rel} {fits1} {fits2}
 
 export
 merge : .{constraint : Ordered a rel}
-     -> .{count1 : Nat} -> .{count2 : Nat}
+     -> {count1 : Nat} -> {count2 : Nat}
      -> (h1 : Heap constraint count1) -> (h2 : Heap constraint count2)
      -> Heap constraint (count1 + count2)
 merge Empty Empty = Empty
@@ -100,5 +106,5 @@ insert : .{constraint : Ordered a _} -> .{n : Nat} -> a -> Heap constraint n -> 
 insert value heap = merge (Node 1 value Empty Empty) heap
 
 export
-deleteMin : .{constraint : Ordered a _} -> .{n : Nat} -> Heap constraint (S n) -> Heap constraint n
+deleteMin : .{constraint : Ordered a _} -> {n : Nat} -> Heap constraint (S n) -> Heap constraint n
 deleteMin (Node _ _ left right) = merge left right

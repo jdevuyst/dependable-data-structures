@@ -27,7 +27,7 @@ main = do putStrLn "Start"
           let leftistHeap = foldl (flip insert) emptyHeap l
           let mergeList = foldl CountedMergeList.insert emptyMergeList l
           putStr "Results: "
-          putStrLn $ show $ findMin leftistHeap
+          putStrLn $ show $ findMin $ deleteMin leftistHeap
           putStrLn $ show $ count $ leftistHeap
           putStrLn $ show $ head $ toVect mergeList
           putStrLn "End"
