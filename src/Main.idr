@@ -11,6 +11,7 @@ import Data.LeftistHeap
 import Data.OrderedVect
 import Data.MergeList
 import Data.LazyPairingHeap
+import Data.PhysicistsQueue
 
 %default total
 
@@ -18,6 +19,16 @@ import Data.LazyPairingHeap
 randoms : Int -> Stream Int
 randoms seed = let seed' = 1664525 * seed + 1013904223 in
                (seed' `shiftR` 2) :: randoms seed'
+
+namespace CountedOrderedVect
+  toVect : {constraint : Ordered Int LTE} -> (cnt : Nat ** Lazy $ MergeList 1 cnt constraint) -> (cnt ** OrderedVect cnt constraint)
+  toVect (cnt ** xs) = (cnt ** mergeListToOrderedVect 1 cnt xs)
+  head : {constraint : Ordered Int LTE} -> (cnt ** OrderedVect cnt constraint) -> Maybe Int
+  head (Z ** Nil) = Nothing
+  head (_ ** x::xs) = Just x
+  tail : {constraint : Ordered Int LTE} -> (cnt ** OrderedVect cnt constraint) -> (cnt ** OrderedVect cnt constraint)
+  tail (Z ** Nil) = (Z ** [])
+  tail (S cnt ** x::xs) = (cnt ** xs)
 
 -- Showcase basic operations on the various data structures in this module
 -- and verify that proofs are erased as expected:
@@ -31,8 +42,9 @@ main = do putStrLn "Start"
           putStr "Results: "
           putStrLn $ show $ findMin $ deleteMin leftistHeap
           putStrLn $ show $ count $ leftistHeap
-          putStrLn $ show $ head $ tail $ toVect mergeList
+          putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
           putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
+          putStrLn $ show $ PhysicistsQueue.head $ tail queue
           putStrLn "End"
           pure ()
   where
@@ -40,13 +52,7 @@ main = do putStrLn "Start"
     emptyHeap = empty
     emptyMergeList : {auto constraint : Ordered Int LTE} -> CountedMergeList 1 constraint
     emptyMergeList = empty
-    toVect : {constraint : Ordered Int LTE} -> (cnt : Nat ** Lazy $ MergeList 1 cnt constraint) -> (cnt ** OrderedVect cnt constraint)
-    toVect (cnt ** xs) = (cnt ** mergeListToOrderedVect 1 cnt xs)
-    head : {constraint : Ordered Int LTE} -> (cnt ** OrderedVect cnt constraint) -> Maybe Int
-    head (Z ** Nil) = Nothing
-    head (_ ** x::xs) = Just x
-    tail : {constraint : Ordered Int LTE} -> (cnt ** OrderedVect cnt constraint) -> (cnt ** OrderedVect cnt constraint)
-    tail (Z ** Nil) = (Z ** [])
-    tail (S cnt ** x::xs) = (cnt ** xs)
     emptyPairingHeap : {auto constraint : Ordered Int LTE} -> CountedPairingHeap constraint
     emptyPairingHeap = CountedPairingHeap.empty
+    queue : PhysicistsQueue 4 Int
+    queue = snoc (snoc (snoc (snoc empty 1) 2) 3) 4

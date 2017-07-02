@@ -43,3 +43,15 @@ By using dependent types we get the following guarantees:
 - Inserting and removing elements changes the size of the heap as expected
 
 Available operations: `findMin`, `merge`, `insert`, `deleteMin`
+
+## PhysicistsQueue
+
+`PhysicistsQueue` is an efficient functional queue data struture. It consist of a 'front list' `f` and a 'reverse list' `r` where the logical list is `f ++ reverse r`.
+
+Using dependent types we can guarantee that
+
+- The reverse list is never larger than the front list
+- `snoc` returns a queue that contains one more element than the input queue
+- `tail` removes one element
+
+Available operations: `snoc`, `head`, `tail`
