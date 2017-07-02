@@ -46,12 +46,12 @@ Available operations: `findMin`, `merge`, `insert`, `deleteMin`
 
 ## PhysicistsQueue
 
-`PhysicistsQueue` is an efficient functional queue data struture. It consist of a 'front list' `f` and a 'reverse list' `r` where the logical list is `f ++ reverse r`.
-
-Using dependent types we can guarantee that
-
-- The reverse list is never larger than the front list
-- `snoc` returns a queue that contains one more element than the input queue
-- `tail` removes one element
+`PhysicistsQueue` is a functional queue data struture. It consist of a 'front list' `f` and a 'reverse list' `r` that together represent the logical list `f ++ reverse r`. Moreover, for reasons of efficiency, it is an invariant that `r` is never larger than `f`.
 
 Available operations: `snoc`, `head`, `tail`
+
+We have proofs for the following properties:
+
+- The reverse list is never larger than the front list
+- `snoc` returns a queue that contains one element more than the input queue
+- `tail` shifts all elements by one position (and drops the head of the queue)
