@@ -10,6 +10,7 @@ import Decidable.IntOrder
 import Data.CountedLeftistHeap
 import Data.OrderedVect
 import Data.MergeList
+import Data.LazyPairingHeap
 
 %default total
 
@@ -26,10 +27,12 @@ main = do putStrLn "Start"
           let l = take 10000 $ randoms 42
           let leftistHeap = foldl (flip insert) emptyHeap l
           let mergeList = foldl CountedMergeList.insert emptyMergeList l
+          let pairingHeap = foldl CountedPairingHeap.insert emptyPairingHeap l
           putStr "Results: "
           putStrLn $ show $ findMin $ deleteMin leftistHeap
           putStrLn $ show $ count $ leftistHeap
-          putStrLn $ show $ head $ toVect mergeList
+          putStrLn $ show $ head $ tail $ toVect mergeList
+          putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
           putStrLn "End"
           pure ()
   where
@@ -42,3 +45,8 @@ main = do putStrLn "Start"
     head : {constraint : Ordered Int LTE} -> (cnt ** OrderedVect cnt constraint) -> Maybe Int
     head (Z ** Nil) = Nothing
     head (_ ** x::xs) = Just x
+    tail : {constraint : Ordered Int LTE} -> (cnt ** OrderedVect cnt constraint) -> (cnt ** OrderedVect cnt constraint)
+    tail (Z ** Nil) = (Z ** [])
+    tail (S cnt ** x::xs) = (cnt ** xs)
+    emptyPairingHeap : {auto constraint : Ordered Int LTE} -> CountedPairingHeap constraint
+    emptyPairingHeap = CountedPairingHeap.empty

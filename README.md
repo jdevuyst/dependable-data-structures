@@ -11,6 +11,7 @@ Using dependent types I was able to prove the following:
 - `LeftistHeap` is always sorted
 - `LeftistHeap` respects the 'leftist property'
 - The result of merging a `LeftistHeap` of length `m` and a heap of length `n` is a heap of length `m + n`
+- `insert` and `deleteMin` yield a `LeftistHeap` that has one element more or less (respectively) than the input heap
 
 Available operations: `findMin`, `merge`, `insert`, `deleteMin`.
 
@@ -32,3 +33,13 @@ By using dependent types we get the following guarantees:
 
 - The `OrderedVect`s have sizes that are expresible as 2ⁿ and are strictly ordered by size
 - A `MergeList` of a given size can be flattened into an `OrderedVect` of the same size
+- When inserting `n` elements, the resulting merge list has `n` elements more than the input merge list
+
+## LazyPairingHeap
+
+`LazyPairingHeap` is another ordered list data structure. We have the following guarantees:
+
+- Elements are ordered
+- Inserting and removing elements changes the size of the heap as expected
+
+Available operations: `findMin`, `merge`, `insert`, `deleteMin`
