@@ -7,7 +7,7 @@ import Decidable.Order
 import Decidable.IntOrder
 
 -- data structures
-import Data.CountedLeftistHeap
+import Data.LeftistHeap
 import Data.OrderedVect
 import Data.MergeList
 import Data.LazyPairingHeap
