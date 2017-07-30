@@ -7,10 +7,12 @@ import Decidable.Order
 import Decidable.IntOrder
 
 -- data structures
+import Data.Vect
 import Data.LeftistHeap
 import Data.OrderedVect
 import Data.MergeList
 import Data.LazyPairingHeap
+import Data.VectRankedElem
 import Data.PhysicistsQueue
 
 %default total
@@ -46,6 +48,7 @@ main = do putStrLn "Start"
           putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
           putStrLn $ show $ PhysicistsQueue.head $ tail queue
           putStrLn "End"
+          putStrLn $ show $ head $ cons 0 $ rev $ [1,2,3] `concat` [4,5]
           pure ()
   where
     emptyHeap : {auto constraint : Ordered Int LTE} -> CountedHeap constraint

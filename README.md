@@ -44,6 +44,32 @@ By using dependent types we get the following guarantees:
 
 Available operations: `findMin`, `merge`, `insert`, `deleteMin`
 
+## VectRankedElem
+
+In Idris, `Elem 2 [1, 2, 3, 4]` is satisfied by a proof that `2` is an element of `[1, 2, 3, 4]`. There is only one such proof:
+
+```
+Idris> the (Elem 2 [1,2,3,4]) (There Here)
+There Here : Elem 2 [1, 2, 3, 4]
+```
+
+The module `VectRankedElem` contains a type `RankedElem` that is similar but also encodes the index where the element is found:
+
+```
+Idris> the (RankedElem 2 [1,2,3,4] 1) (There Here)
+There Here : RankedElem 2 [1, 2, 3, 4] 1
+```
+
+The module also contains a few functions that use `RankedElem` to prove interesting properties:
+
+- `cons_ x xs` returns `(x::xs)` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (x::xs) (S i)` and a proof of `RankedElem x (x::xs) Z`.
+- `concat_ xs ys` returns `xs ++ ys` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (xs ++ ys) i` and a proof that for every `RankedElem el ys i` there is a `RankedElem el (length xs + i) i`.
+- `rev_ xs` returns `reverse xs` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (reverse xs) (length xs - i)`.
+
+The module also contains functions `cons`, `concat`, `rev` that call their `_` counterpart and return only data. These functions behave entirely like `::`, `++`, `reverse`.
+
+The proofs returned by `cons_`, `concat_`, `rev_` can be composed to prove properties on more complicated data structures.
+
 ## PhysicistsQueue
 
 `PhysicistsQueue` is a functional queue data struture. It consist of a 'front list' `f` and a 'reverse list' `r` that together represent the logical list `f ++ reverse r`. Moreover, for reasons of efficiency, it is an invariant that `r` is never larger than `f`.
