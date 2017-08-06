@@ -15,8 +15,8 @@ data PhysicistsQueue : (size : Nat) -> (ty : Type) -> Type where
        -> .{auto invariant : LTE m n}
        -> PhysicistsQueue (n + m) ty
 
-queues : {ty : Type} -> PhysicistsQueue _ ty -> ((size : Nat ** Vect size ty),
-                                  (size : Nat ** Vect size ty))
+queues : {ty : Type} -> PhysicistsQueue _ ty -> ((size1 : Nat ** Vect size1 ty),
+                                                 (size2 : Nat ** Vect size2 ty))
 queues (Queue {n} f {m} r) = ((n ** f), (m ** r))
 
 export

@@ -74,11 +74,14 @@ The proofs returned by `cons_`, `concat_`, `rev_` can be composed to prove prope
 
 `PhysicistsQueue` is a functional queue data struture. It consist of a 'front list' `f` and a 'reverse list' `r` that together represent the logical list `f ++ reverse r`. Moreover, for reasons of efficiency, it is an invariant that `r` is never larger than `f`.
 
-Available operations: `snoc`, `head`, `tail`
+Available operations: `head`, `snoc_`, `snoc`, `tail_`, `tail`
 
-There's also a `RankedElem` ADT for `PhysicistsQueue`s that makes use of `VectRankedElem` fascilities.
+Similar to what was done in `VectRankedElem` (see above), `snoc_` and `tail_` return functions that map proofs about the original queue onto proofs about the new queue.
 
 We have proofs for the following properties:
 
 - The reverse list is never larger than the front list
-- Correctness of `snoc` and `tail`
+- `snoc_` preserves the existence and the index of all elements and it adds the new element to the end of the queue
+- `tail_` drops the first element and shifts the indices of the remaining elements by 1
+
+`snoc` and `tail` are simple wrappers around `snoc_` and `tail_` that return the new queue, but not the proofs.
