@@ -46,9 +46,9 @@ main = do putStrLn "Start"
           putStrLn $ show $ count $ leftistHeap
           putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
           putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
+          putStrLn $ show $ head $ cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
           putStrLn $ show $ PhysicistsQueue.head $ tail queue
           putStrLn "End"
-          putStrLn $ show $ head $ cons 0 $ rev $ [1,2,3] `concat` [4,5]
           pure ()
   where
     emptyHeap : {auto constraint : Ordered Int LTE} -> CountedHeap constraint

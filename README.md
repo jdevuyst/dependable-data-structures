@@ -62,9 +62,9 @@ There Here : RankedElem 2 [1, 2, 3, 4] 1
 
 The module also contains a few functions that use `RankedElem` to prove interesting properties:
 
-- `cons_ x xs` returns `(x::xs)` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (x::xs) (S i)` and a proof of `RankedElem x (x::xs) Z`.
-- `concat_ xs ys` returns `xs ++ ys` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (xs ++ ys) i` and a proof that for every `RankedElem el ys i` there is a `RankedElem el (length xs + i) i`.
-- `rev_ xs` returns `reverse xs` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (reverse xs) (length xs - i)`.
+- `cons_ x xs` returns `(x::xs)` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (x::xs) (S i)` and a proof of `RankedElem x (x::xs) Z`
+- `concat_ xs ys` returns `xs ++ ys` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (xs ++ ys) i` and a proof that for every `RankedElem el ys i` there is a `RankedElem el (length xs + i) i`
+- `rev_ xs` returns `reverse xs` as well as a proof that for every `RankedElem el xs i` there is a `RankedElem el (reverse xs) (length xs - i)`
 
 The module also contains functions `cons`, `concat`, `rev` that call their `_` counterpart and return only data. These functions behave entirely like `::`, `++`, `reverse`.
 
@@ -76,8 +76,9 @@ The proofs returned by `cons_`, `concat_`, `rev_` can be composed to prove prope
 
 Available operations: `snoc`, `head`, `tail`
 
+There's also a `RankedElem` ADT for `PhysicistsQueue`s that makes use of `VectRankedElem` fascilities.
+
 We have proofs for the following properties:
 
 - The reverse list is never larger than the front list
-- `snoc` returns a queue that contains one element more than the input queue
-- `tail` shifts all elements by one position (and drops the head of the queue)
+- Correctness of `snoc` and `tail`
