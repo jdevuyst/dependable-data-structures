@@ -41,14 +41,11 @@ lteAddRightLemma {l} {r} {c} smaller
           cLTElc = rewrite plusCommutative l c in
                    lteAddRight {m = l} c
 
-partial -- totality checker bug?
 minusPlusEqualsPlusMinus : (l, c, r: Nat) -> LTE r c -> LTE r (l + c) -> (l + c) - r = l + (c - r)
 minusPlusEqualsPlusMinus Z _ _ _ _ = Refl
 minusPlusEqualsPlusMinus (S _) Z Z _ _ = Refl
-minusPlusEqualsPlusMinus (S _) (S Z) Z _ _ = Refl
--- minusPlusEqualsPlusMinus l Z Z _ _ = rewrite sym $ minusZeroRight (l + Z) in Refl
--- minusPlusEqualsPlusMinus l (S Z) Z _ _ = rewrite sym $ minusZeroRight (l + 1) in Refl
-minusPlusEqualsPlusMinus _ Z (S Z) _ _ impossible
+minusPlusEqualsPlusMinus (S _) (S _) Z _ _ = Refl
+minusPlusEqualsPlusMinus _ Z (S _) _ _ impossible
 minusPlusEqualsPlusMinus l (S c) (S r) smaller _
   = let smaller' = fromLteSucc smaller in
     rewrite sym $ plusSuccRightSucc l c in
@@ -118,18 +115,16 @@ tail_ (Queue (_::fs) r)
   = let (ret ** (fProj, rProj)) = make_ fs r in
     (ret ** \el =>
       case toPattern el of
-      (Z ** (_, prf)) => void $ SIsNotZ prf
-      (S _ ** (FrontElem (There x), prf)) => rewrite toPredEq prf in fProj x
-      (_ ** (BackElem x, prf)) => rewrite toMinusSuccPredEq $ toPredEq prf in rProj x)
+      (Z ** (_, Refl)) impossible
+      (S _ ** (FrontElem (There x), Refl)) => fProj x
+      (_ ** (BackElem x, prf)) => rewrite toMinusSuccPredEq prf in rProj x)
     where toPattern : {q : PhysicistsQueue (S _) ty}
                    -> {i : Nat}
                    -> RankedElem x q (S i)
                    -> (i' ** (RankedElem x q i', S i = i'))
           toPattern {i} el = (S i ** (el, Refl))
-          toPredEq : S i = i' -> i = pred i'
-          toPredEq prf = cong {f = Nat.pred} prf
-          toMinusSuccPredEq : c = pred (x + y `minus` z) -> c = x + y `minus` S z
-          toMinusSuccPredEq {x} {y} {z} prf = rewrite minusSuccPred (x + y) z in prf
+          toMinusSuccPredEq : S c = x + y `minus` z -> c = x + y `minus` S z
+          toMinusSuccPredEq {x} {y} {z} prf = rewrite minusSuccPred (x + y) z in cong {f = Nat.pred} prf
 
 export
 tail : PhysicistsQueue (S size) ty -> PhysicistsQueue size ty
