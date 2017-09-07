@@ -108,3 +108,11 @@ We have proofs for the following properties:
 - `tail_` drops the first element and shifts the indices of the remaining elements by 1
 
 `snoc` and `tail` are simple wrappers around `snoc_` and `tail_` that return the new queue, but not the proofs.
+
+## BinarySearchTree
+
+`BinarySearchTree` is an implementation of functional binary trees.
+
+Available operations: `decElem`, `elem`, `insert`
+
+The above operations are based on a higher order function named `find`. `find` takes a needle and a function for arguments. `find` efficiently recurses over the tree trying to find the needle. At every step it returns the result of calling `f` with (a) contextual information about the search process and (b) the result of the previous step. The search context includes a verified upper and lower bound for the current node, by which `find` can prove to `f` that it's traversing the tree correctly.

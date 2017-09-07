@@ -14,6 +14,7 @@ import Data.MergeList
 import Data.LazyPairingHeap
 import Data.VectRankedElem
 import Data.PhysicistsQueue
+import Data.BinarySearchTree
 
 %default total
 
@@ -41,13 +42,15 @@ main = do putStrLn "Start"
           let leftistHeap = foldl (flip insert) emptyHeap l
           let mergeList = foldl CountedMergeList.insert emptyMergeList l
           let pairingHeap = foldl CountedPairingHeap.insert emptyPairingHeap l
-          putStr "Results: "
+          let binaryTree = foldl BinarySearchTree.insert emptyBinaryTree l
+          putStrLn "Results: "
           putStrLn $ show $ findMin $ deleteMin leftistHeap
           putStrLn $ show $ count $ leftistHeap
           putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
           putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
           putStrLn $ show $ head $ cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
           putStrLn $ show $ PhysicistsQueue.head $ tail queue
+          -- putStrLn $ show $ 1 `elem` binaryTree -- https://github.com/idris-lang/Idris-dev/issues/4049
           putStrLn "End"
           pure ()
   where
@@ -59,3 +62,5 @@ main = do putStrLn "Start"
     emptyPairingHeap = CountedPairingHeap.empty
     queue : PhysicistsQueue 4 Int
     queue = snoc (snoc (snoc (snoc empty 1) 2) 3) 4
+    emptyBinaryTree : {auto constraint : Ordered Int LTE} -> (len : Nat ** BinarySearchTree constraint len)
+    emptyBinaryTree = (Z ** Empty)
