@@ -3,11 +3,12 @@
 Experiments in implementing data structures in the dependently typed programming language [Idris](https://www.idris-lang.org).
 
 Notably missing:
+
 - Instances of `Eq`, `Ord`, `Functor`, `Applicative`, `Monad`, `Traversable`, `Show`, `DecEq`
 - Key-value types (dictionaries, key-value priority queues)
 - Benchmarks
 
-For now, these are left as a proverbial 'exercise for the reader'.
+For now these are left as a proverbial 'exercise for the reader'.
 
 # Table of Contents
 
@@ -20,6 +21,7 @@ For now, these are left as a proverbial 'exercise for the reader'.
   * [MergeList](#mergelist)
   * [LazyPairingHeap](#lazypairingheap)
   * [PhysicistsQueue](#physicistsqueue)
+  * [BinarySearchTree](#binarysearchtree)
 
 # Dependently Typed Lists
 
