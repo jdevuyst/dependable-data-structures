@@ -18,7 +18,7 @@ implementation Preorder Int LTE where
 
 export
 implementation Poset Int LTE where
-  antisymmetric a b _ _ = really_believe_me ()
+  antisymmetric x _ _ _ = really_believe_me $ Refl {x}
 
 export
 implementation Ordered Int LTE where
