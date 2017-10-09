@@ -50,7 +50,7 @@ main = do putStrLn "Start"
           putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
           putStrLn $ show $ head $ cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
           putStrLn $ show $ PhysicistsQueue.head $ tail queue
-          -- putStrLn $ show $ 1 `elem` binaryTree -- https://github.com/idris-lang/Idris-dev/issues/4049
+          putStrLn $ show $ 1 `elem` binaryTree
           putStrLn "End"
           pure ()
   where
