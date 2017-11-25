@@ -15,6 +15,7 @@ import Data.LazyPairingHeap
 import Data.VectRankedElem
 import Data.PhysicistsQueue
 import Data.BinarySearchTree
+import Data.RandomAccessList
 
 %default total
 
@@ -43,14 +44,16 @@ main = do putStrLn "Start"
           let mergeList = foldl CountedMergeList.insert emptyMergeList l
           let pairingHeap = foldl CountedPairingHeap.insert emptyPairingHeap l
           let binaryTree = foldl BinarySearchTree.insert emptyBinaryTree l
+          let countedRandomAccessList = foldl (flip CountedRandomAccessList.cons) CountedRandomAccessList.empty l
           putStrLn "Results: "
           putStrLn $ show $ findMin $ deleteMin leftistHeap
           putStrLn $ show $ count $ leftistHeap
           putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
           putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
-          putStrLn $ show $ head $ cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
+          putStrLn $ show $ head $ VectRankedElem.cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
           putStrLn $ show $ PhysicistsQueue.head $ tail queue
           putStrLn $ show $ 1 `elem` binaryTree
+          putStrLn $ show $ the (Maybe Int) $ CountedRandomAccessList.index 2 $ CountedRandomAccessList.update 2 countedRandomAccessList (const (the Int 42))
           putStrLn "End"
           pure ()
   where

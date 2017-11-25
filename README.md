@@ -22,6 +22,7 @@ For now these are left as a proverbial 'exercise for the reader'.
   * [LazyPairingHeap](#lazypairingheap)
   * [PhysicistsQueue](#physicistsqueue)
   * [BinarySearchTree](#binarysearchtree)
+  * [Random Access List](#randomaccesslist)
 
 # Dependently Typed Lists
 
@@ -118,3 +119,19 @@ We have proofs for the following properties:
 Available operations: `decElem`, `elem`, `insert`
 
 The above operations are based on a higher order function named `find`. `find` takes a needle and a function for arguments. `find` efficiently recurses over the tree trying to find the needle. At every step it returns the result of calling `f` with (a) contextual information about the search process and (b) the result of the previous step. The search context includes a verified upper and lower bound for the current node, by which `find` can prove to `f` that it's traversing the tree correctly.
+
+## Random Access List
+
+`RandomAccessList` is a list structure that provides efficient prepend and access to element at arbitrary indices. Informally you can think of it as a persistent array.
+
+The namespace `Data.RandomAccessList` contains `RandomAccessList` and `CountedRandomAccessList` types. They allow the following operations:
+
+- `cons` for prepending an element
+- `index` for accessing an element at a specific index
+- `update` for updating an element at a specific index
+
+These operations take O(log<sub>n</sub>) time. See Okasaki's book for techniques to reduce the time complexity to constant time.
+
+By construction all accesses and updates to a `RandomAccessList` are proved to be safe.
+
+Usually arrays allow efficient append and prepend is expensive. In `RandomAccessList`, prepend is cheap and append is expensive. The performance of these operations can be swapped by translating all indices. That is, `cons` can be interpreted as an append and access to indices can be translated as follows: `realIndex(virtualIndex) = size - 1 - virtualIndex`,
