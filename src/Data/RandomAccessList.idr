@@ -33,17 +33,38 @@ pow2 n = power 2 n
 
 data TreeList : (pos : Nat) -> (size : Nat) -> (ty : Type) -> Type where
   Nil : TreeList _ Z _
-  (::) : {nextPos, nextSize : Nat} -> .{auto posPrf : LT pos nextPos}
-         -> Tree (pow2 pos) ty -> TreeList nextPos nextSize ty
-         -> TreeList pos (pow2 pos + nextSize) ty
+  (::) : {nextPos : Nat} -> .{auto posPrf : LT pos nextPos}
+         -> .{size : Nat} -> .{auto smaller : LTE (pow2 pos) size}
+         -> Tree (pow2 pos) ty -> TreeList nextPos (size - (pow2 pos)) ty
+         -> TreeList pos size ty
 
-treeListLookup : {pos : Nat} -> Fin size -> TreeList pos size ty -> ty
-treeListLookup {pos} idx (t :: ts) with (select (pow2 pos) idx)
+minusLeftPlusRight : {x, y, z : Nat} -> {auto smaller : LTE y x}
+                  -> x - y = z -> x = y + z
+minusLeftPlusRight {x} {y = Z} {z} prf = rewrite sym $ minusZeroRight x in prf
+minusLeftPlusRight {x = Z} {y = S _} _ impossible
+minusLeftPlusRight {x = S x'} {y = S y'} {z} {smaller} prf
+  = let smaller' = fromLteSucc smaller
+        prf' = replace {P = \var => var = z} (minusSuccSucc x' y') prf
+        ind = minusLeftPlusRight prf' in
+    cong {f = S} ind
+
+treeSizeComponents : (pos, size : Nat) -> {auto smaller : LTE (pow2 pos) size}
+                     -> size = pow2 pos + (size - pow2 pos)
+treeSizeComponents pos size {smaller} = minusLeftPlusRight Refl
+
+treeListLookup : {pos, size : Nat} -> Fin size -> TreeList pos size ty -> ty
+treeListLookup {pos} {size} idx (t :: ts)
+  with (let eqPrf = treeSizeComponents pos size
+            idx' = (replace {P = \x => Fin x} eqPrf idx) in
+        select (pow2 pos) idx')
   | (Left idx') = treeLookup idx' t
   | (Right idx') = treeListLookup idx' ts
 
-treeListUpdate : {pos : Nat} -> Fin size -> TreeList pos size ty -> (ty -> ty) -> TreeList pos size ty
-treeListUpdate {pos} idx (t :: ts) f with (select (pow2 pos) idx)
+treeListUpdate : {pos, size : Nat} -> Fin size -> TreeList pos size ty -> (ty -> ty) -> TreeList pos size ty
+treeListUpdate {pos} {size} idx (t :: ts) f
+  with (let eqPrf = treeSizeComponents pos size
+            idx' = (replace {P = \x => Fin x} eqPrf idx) in
+        select (pow2 pos) idx')
   | (Left idx') = treeUpdate idx' t f :: ts
   | (Right idx') = t :: treeListUpdate idx' ts f
 
@@ -55,6 +76,59 @@ pow2Lemma (S x)
     rewrite plusZeroRightNeutral (pow2 x + pow2 x) in
     Refl
 
+lteAddLeft : (m, n : Nat) -> LTE n (m + n)
+lteAddLeft m n = rewrite plusCommutative m n in lteAddRight {m} n
+
+ltAddRight : (n : Nat) -> {m : Nat} -> LT n (n + (S m))
+ltAddRight n {m} = rewrite sym $ plusSuccRightSucc n m in lteAddRight {m} (S n)
+
+lteAddBoth : {x, y, x', y' : Nat} -> LTE x y -> LTE x' y' -> LTE (x + x') (y + y')
+lteAddBoth {x' = S _} {y' = Z} _ _ impossible
+lteAddBoth {x} {y} {x' = Z} {y'} smaller _
+  = rewrite plusZeroRightNeutral x in
+    lteTransitive smaller (lteAddRight y)
+lteAddBoth {x} {y} {x' = S x''} {y' = S y''} smaller smaller'
+  = let ind = lteAddBoth smaller (fromLteSucc smaller') in
+    rewrite sym $ plusSuccRightSucc x x'' in
+    rewrite sym $ plusSuccRightSucc y y'' in
+    LTESucc ind
+
+pow2Monotone : {n, m : Nat} -> LTE n m -> LTE (pow2 n) (pow2 m)
+pow2Monotone {n = Z} {m = Z} _ = LTESucc LTEZero
+pow2Monotone {n = Z} {m = S m'} _
+  = let prf = pow2Monotone {n = Z} {m = m'} LTEZero in
+    lteTransitive prf (lteAddRight (pow2 m') {m = (pow2 m' + 0)})
+pow2Monotone {n = S _} {m = Z} _ impossible
+pow2Monotone {n = S n'} {m = S m'} smaller
+  = let prf = pow2Monotone {n = n'} {m = m'} (fromLteSucc smaller)
+        prf' = lteAddBoth prf (lteRefl {n = Z}) in
+    lteAddBoth prf prf'
+
+minusPlusNeutral : (x, y : Nat) -> LTE y x -> (x - y) + y = x
+minusPlusNeutral x Z _
+  = replace {P = \var => var = x}
+            (sym $ plusZeroRightNeutral (x `minus` Z))
+            (minusZeroRight x)
+minusPlusNeutral Z (S _) _ impossible
+minusPlusNeutral (S x) (S y) prf
+  = let ind = minusPlusNeutral x y (fromLteSucc prf)
+        succPrf = plusSuccRightSucc (x `minus` y) y in
+    rewrite sym succPrf in
+    cong {f = S} ind
+
+plusMinusAssociative : (a, b, c : Nat) -> {smaller : LTE c b} -> a + (b `minus` c) = (a + b) `minus` c
+plusMinusAssociative a b Z
+  = rewrite minusZeroRight b in
+    rewrite minusZeroRight (a + b) in
+    Refl
+plusMinusAssociative a Z (S _) impossible
+plusMinusAssociative a (S b) (S c) {smaller}
+  = let ind = plusMinusAssociative {smaller = fromLteSucc smaller} a b c
+        succPrf = sym $ minusSuccSucc (a + b) c
+        p = \x => (a + b) `minus` c = x `minus` (S c)
+        succPrf' = replace {P = p} (plusSuccRightSucc a b) succPrf in
+    replace {P = \x => a + (b `minus` c) = x} succPrf' ind
+
 lteReflAddLeftContra : LTE (x + S y) x -> Void
 lteReflAddLeftContra {x = S _} LTEZero impossible
 lteReflAddLeftContra (LTESucc {left = Z + S y} {right = Z} prf) impossible
@@ -62,22 +136,31 @@ lteReflAddLeftContra (LTESucc {left = S x + S y} {right = S x} prf) = absurd $ l
 
 treeListCons : {tPos, pos : Nat} -> Tree (pow2 tPos) ty -> TreeList pos size ty -> .{auto fits : LTE tPos pos}
                -> (newPos : Nat ** TreeList newPos (size + (pow2 tPos)) ty)
-treeListCons {tPos} t Nil = rewrite sym $ plusZeroRightNeutral (pow2 tPos) in 
-                            (tPos ** (::) {nextPos = S tPos} {posPrf = lteRefl} t Nil)
-treeListCons {tPos} {pos} t' ((::) {nextSize} t ts) {fits}
+treeListCons {ty} {tPos} t Nil = rewrite plusCommutative Z (pow2 tPos) in
+                                 rewrite plusZeroRightNeutral (pow2 tPos) in
+                                 let nil = replace {P = \x => TreeList (S tPos) x ty}
+                                                   (minusZeroN (pow2 tPos))
+                                                   RandomAccessList.Nil
+                                     ts' = (::) {nextPos = S tPos} {posPrf = lteRefl} {smaller = lteRefl} t nil in
+                                 (tPos ** ts')
+treeListCons {tPos} {pos} {size} t' ((::) {smaller} t ts) {fits} {ty}
   = case cmp tPos pos of
     CmpEQ => let merged = Merged t' t
                  merged' = replace {P = \x => Tree x ty} (pow2Lemma tPos) merged
                  (newPos ** ts') = treeListCons {tPos = S tPos} merged' ts in
-             rewrite plusCommutative (pow2 tPos) nextSize in
-             rewrite sym $ plusAssociative nextSize (pow2 tPos) (pow2 tPos) in
-             rewrite pow2Lemma tPos in
+             rewrite sym $ plusZeroRightNeutral (pow2 tPos) in
+             rewrite sym $ minusPlusNeutral size (pow2 tPos) $
+                     lteTransitive (pow2Monotone fits) smaller in
+             rewrite sym $ plusAssociative (size `minus` pow2 tPos) (pow2 tPos) (pow2 tPos + Z) in
              (newPos ** ts')
-    CmpLT diff => let prf = lteAddRight {m = diff} (S tPos)
-                      prf' = replace {P = \x => LTE (S tPos) x} (plusSuccRightSucc tPos diff) prf
-                      ts' = t' :: (t :: ts) in
-                  rewrite plusCommutative (pow2 (tPos + S diff) + nextSize) (pow2 tPos) in
-                  (tPos ** ts')
+    CmpLT diff => let p = plusZeroRightNeutral size
+                      p' = minusZeroN $ pow2 tPos
+                      p'' = replace {P = \x => size + x = size} p' p
+                      p''' = replace {P = \x => x = size} (plusMinusAssociative {smaller = lteRefl} size (pow2 tPos) (pow2 tPos)) p''
+                      ts' = (::) {smaller} t ts
+                      ts'' = replace {P = \s => TreeList (tPos + (S diff)) s ty} (sym p''') ts'
+                      ts''' = RandomAccessList.(::) {posPrf = ltAddRight tPos} {smaller = lteAddLeft size (pow2 tPos)} t' ts'' in
+                  (tPos ** ts''')
     CmpGT diff => absurd $ lteReflAddLeftContra fits
 
 namespace RandomAccessList
@@ -97,11 +180,11 @@ namespace RandomAccessList
       (pos' ** l')
 
   export
-  index : Fin size -> RandomAccessList size ty -> ty
+  index : {size : Nat} -> Fin size -> RandomAccessList size ty -> ty
   index idx (pos ** l) = treeListLookup idx l
 
   export
-  update : Fin size -> RandomAccessList size ty -> (ty -> ty) -> RandomAccessList size ty
+  update : {size : Nat} -> Fin size -> RandomAccessList size ty -> (ty -> ty) -> RandomAccessList size ty
   update idx (pos ** l) f = (pos ** treeListUpdate idx l f)
 
 namespace CountedRandomAccessList
