@@ -1,4 +1,4 @@
-module Main
+module Test.Main
 
 -- contrib
 import Decidable.Order
@@ -34,28 +34,31 @@ namespace CountedOrderedVect
   tail (Z ** Nil) = (Z ** [])
   tail (S cnt ** x::xs) = (cnt ** xs)
 
--- Showcase basic operations on the various data structures in this module
--- and verify that proofs are erased as expected:
--- idris --warnreach -p contrib Main.idr -o main && time ./main
-main : IO ()
-main = do putStrLn "Start"
-          let l = take 10000 $ randoms 42
-          let leftistHeap = foldl (flip insert) emptyHeap l
-          let mergeList = foldl CountedMergeList.insert emptyMergeList l
-          let pairingHeap = foldl CountedPairingHeap.insert emptyPairingHeap l
-          let binaryTree = foldl BinarySearchTree.insert emptyBinaryTree l
-          let countedRandomAccessList = foldl (flip CountedRandomAccessList.cons) CountedRandomAccessList.empty l
-          putStrLn "Results: "
-          putStrLn $ show $ findMin $ deleteMin leftistHeap
-          putStrLn $ show $ count $ leftistHeap
-          putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
-          putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
-          putStrLn $ show $ head $ VectRankedElem.cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
-          putStrLn $ show $ PhysicistsQueue.head $ tail queue
-          putStrLn $ show $ 1 `elem` binaryTree
-          putStrLn $ show $ the (Maybe Int) $ CountedRandomAccessList.index 2 $ CountedRandomAccessList.update 2 countedRandomAccessList (const (the Int 42))
-          putStrLn "End"
-          pure ()
+||| Showcase basic operations on the various data structures in this module
+||| and verify that proofs are erased as expected:
+|||
+|||     idris --warnreach --testpkg data.ipkg
+export
+mainTests : IO ()
+mainTests
+  = do putStrLn "Start"
+       let l = take 10000 $ randoms 42
+       let leftistHeap = foldl (flip insert) emptyHeap l
+       let mergeList = foldl CountedMergeList.insert emptyMergeList l
+       let pairingHeap = foldl CountedPairingHeap.insert emptyPairingHeap l
+       let binaryTree = foldl BinarySearchTree.insert emptyBinaryTree l
+       let countedRandomAccessList = foldl (flip CountedRandomAccessList.cons) CountedRandomAccessList.empty l
+       putStrLn "Results: "
+       putStrLn $ show $ findMin $ deleteMin leftistHeap
+       putStrLn $ show $ count $ leftistHeap
+       putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
+       putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
+       putStrLn $ show $ head $ VectRankedElem.cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
+       putStrLn $ show $ PhysicistsQueue.head $ tail queue
+       putStrLn $ show $ 1 `elem` binaryTree
+       putStrLn $ show $ the (Maybe Int) $ CountedRandomAccessList.index 2 $ CountedRandomAccessList.update 2 countedRandomAccessList (const (the Int 42))
+       putStrLn "End"
+       pure ()
   where
     emptyHeap : {auto constraint : Ordered Int LTE} -> CountedHeap constraint
     emptyHeap = empty

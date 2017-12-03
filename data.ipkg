@@ -1,5 +1,20 @@
-package Data
+package data.ipkg
+
+sourceloc = git@github.com:jdevuyst/idris-data.git
+
+pkgs = contrib
+
+opts = "--warnreach"
 
 sourcedir = src
-modules = Decidable.IntOrder Data.LeftistHeap Data.OrderedVect Data.MergeList Data.LazyPairingHeap Data.VectRankedElem Data.PhysicistsQueue Data.BinarySearchTree Data.RandomAccessList
-opts = "-p contrib"
+modules = Decidable.IntOrder
+        , Data.LeftistHeap
+        , Data.OrderedVect
+        , Data.MergeList
+        , Data.LazyPairingHeap
+        , Data.VectRankedElem
+        , Data.PhysicistsQueue
+        , Data.BinarySearchTree
+        , Data.RandomAccessList
+        , Test.Main
+tests = Test.Main.mainTests
