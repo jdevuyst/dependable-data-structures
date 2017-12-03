@@ -17,7 +17,7 @@ For now these are left as a proverbial 'exercise for the reader'.
   * [OrderedVect](#orderedvect)
   * [VectRankedElem](#vectrankedelem)
 * [Okasaki's Purely Functional Data Structures](#okasakis-purely-functional-data-structures)
-  * [Leftist Heap](#leftist-heap)
+  * [LeftistHeap](#leftistheap)
   * [MergeList](#mergelist)
   * [LazyPairingHeap](#lazypairingheap)
   * [PhysicistsQueue](#physicistsqueue)
@@ -62,7 +62,7 @@ The proofs returned by `cons_`, `concat_`, `rev_` can be composed to prove prope
 
 The data structures in this section are inspired by Chris Okasaki's book [Purely Functional Data Structures](https://books.google.com.sg/books/about/Purely_Functional_Data_Structures.html?id=SxPzSTcTalAC&redir_esc=y). This book is based on Okasaki's PhD Thesis, which is available as a free [PDF](https://www.cs.cmu.edu/~rwh/theses/okasaki.pdf).
 
-## Leftist Heap
+## LeftistHeap
 
 Using dependent types I was able to prove the following:
 
@@ -120,7 +120,7 @@ Available operations: `decElem`, `elem`, `insert`
 
 The above operations are based on a higher order function named `find`. `find` takes a needle and a function for arguments. `find` efficiently recurses over the tree trying to find the needle. At every step it returns the result of calling `f` with (a) contextual information about the search process and (b) the result of the previous step. The search context includes a verified upper and lower bound for the current node, by which `find` can prove to `f` that it's traversing the tree correctly.
 
-## Random Access List
+## RandomAccessList
 
 `RandomAccessList` is a list structure that provides efficient prepend and access to element at arbitrary indices. Informally you can think of it as a persistent array.
 
