@@ -70,3 +70,20 @@ mainTests
     queue = snoc (snoc (snoc (snoc empty 1) 2) 3) 4
     emptyBinaryTree : {auto constraint : Ordered Int LTE} -> (len : Nat ** BinarySearchTree constraint len)
     emptyBinaryTree = (Z ** Empty)
+
+export
+randomAccessListTests : IO ()
+randomAccessListTests
+  = do let ral = foldl (flip CountedRandomAccessList.cons) CountedRandomAccessList.empty (the (List Nat) [0,1,2,3,4,5,6])
+       --let ral = the (CountedRandomAccessList Nat) $ CountedRandomAccessList.update 6 ral (const (the Nat 100))
+       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 0 ral
+       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 1 ral
+       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 2 ral
+       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 3 ral
+       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 4 ral
+       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 5 ral
+       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 6 ral
+       --putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 7 ral
+       --putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 8 ral
+       --putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 9 ral
+       pure ()

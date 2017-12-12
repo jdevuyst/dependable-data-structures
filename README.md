@@ -5,7 +5,7 @@ Experiments in implementing data structures in the dependently typed programming
 Notably missing:
 
 - Instances of `Eq`, `Ord`, `Functor`, `Applicative`, `Monad`, `Traversable`, `Show`, `DecEq`
-- Key-value types (dictionaries, key-value priority queues)
+- Efficient dictionaries (these are a generalization of sets)
 - Benchmarks
 
 For now these are left as a proverbial 'exercise for the reader'.
@@ -22,7 +22,7 @@ For now these are left as a proverbial 'exercise for the reader'.
   * [LazyPairingHeap](#lazypairingheap)
   * [PhysicistsQueue](#physicistsqueue)
   * [BinarySearchTree](#binarysearchtree)
-  * [Random Access List](#randomaccesslist)
+  * [RandomAccessList](#randomaccesslist)
 
 # Dependently Typed Lists
 

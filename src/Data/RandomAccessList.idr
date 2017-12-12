@@ -4,13 +4,21 @@ import Data.Fin
 
 %default total
 
+-- TODO: Use idris-quickcheck to verify that the chosen implementation matches the
+-- behavior of an implementation that uses induction (see comments)
 select : (size1 : Nat) -> {size2 : Nat} -> Fin (size1 + size2) -> Either (Fin size1) (Fin size2)
+-- select Z {size2} idx = Right idx
+-- select (S size1) FZ = Left FZ
+-- select (S size1) {size2} (FS idx)
+--   = case select size1 idx of
+--     Left n => Left $ FS n
+--     Right n => Right n
 select size1 {size2 = Z} idx = Left $ rewrite sym $ plusZeroRightNeutral size1 in idx
-select size1 {size2 = (S _)} idx =
-  let idxInt = finToInteger idx in
-  case integerToFin idxInt size1 of
-  Just idx' => Left idx'
-  Nothing => Right $ restrict _ idxInt
+select size1 {size2 = S _} idx
+  = let idxInt = finToInteger idx in
+    case integerToFin idxInt size1 of
+    Just idx' => Left idx'
+    Nothing => Right $ restrict _ (idxInt - cast size1)
 
 data Tree : (size : Nat) -> (ty : Type) -> Type where
   Singleton : (value : ty) -> Tree (S Z) ty
