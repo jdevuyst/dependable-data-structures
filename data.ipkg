@@ -13,7 +13,7 @@ modules = Decidable.IntOrder
         , Data.MergeList
         , Data.LazyPairingHeap
         , Data.VectRankedElem
-        , Data.PhysicistsQueue
+        , Data.Queue
         , Data.BinarySearchTree
         , Data.RandomAccessList
         , Test.Main

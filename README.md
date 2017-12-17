@@ -20,7 +20,7 @@ For now these are left as a proverbial 'exercise for the reader'.
   * [LeftistHeap](#leftistheap)
   * [MergeList](#mergelist)
   * [LazyPairingHeap](#lazypairingheap)
-  * [PhysicistsQueue](#physicistsqueue)
+  * [Queue](#queue)
   * [BinarySearchTree](#binarysearchtree)
   * [RandomAccessList](#randomaccesslist)
 
@@ -96,9 +96,9 @@ By using dependent types we get the following guarantees:
 
 Available operations: `findMin`, `merge`, `insert`, `deleteMin`
 
-## PhysicistsQueue
+## Queue
 
-`PhysicistsQueue` is a functional queue data struture. It consist of a 'front list' `f` and a 'reverse list' `r` that together represent the logical list `f ++ reverse r`. Moreover, for reasons of efficiency, it is an invariant that `r` is never larger than `f`.
+The type `Queue` is a functional queue data struture. It consist of a 'front list' `f` and a 'reverse list' `r` that together represent the logical list `f ++ reverse r`. Moreover, for reasons of efficiency, it is an invariant that `r` is never larger than `f`.
 
 Available operations: `head`, `snoc_`, `snoc`, `tail_`, `tail`
 

@@ -13,7 +13,7 @@ import Data.OrderedVect
 import Data.MergeList
 import Data.LazyPairingHeap
 import Data.VectRankedElem
-import Data.PhysicistsQueue
+import Data.Queue
 import Data.BinarySearchTree
 import Data.RandomAccessList
 
@@ -54,7 +54,7 @@ mainTests
        putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
        putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
        putStrLn $ show $ head $ VectRankedElem.cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
-       putStrLn $ show $ PhysicistsQueue.head $ tail queue
+       putStrLn $ show $ Queue.head $ tail queue
        putStrLn $ show $ 1 `elem` binaryTree
        putStrLn $ show $ the (Maybe Int) $ CountedRandomAccessList.index 2 $ CountedRandomAccessList.update 2 countedRandomAccessList (const (the Int 42))
        putStrLn "End"
@@ -66,7 +66,7 @@ mainTests
     emptyMergeList = empty
     emptyPairingHeap : {auto constraint : Ordered Int LTE} -> CountedPairingHeap constraint
     emptyPairingHeap = CountedPairingHeap.empty
-    queue : PhysicistsQueue 4 Int
+    queue : Queue 4 Int
     queue = snoc (snoc (snoc (snoc empty 1) 2) 3) 4
     emptyBinaryTree : {auto constraint : Ordered Int LTE} -> (len : Nat ** BinarySearchTree constraint len)
     emptyBinaryTree = (Z ** Empty)
@@ -75,7 +75,6 @@ export
 randomAccessListTests : IO ()
 randomAccessListTests
   = do let ral = foldl (flip CountedRandomAccessList.cons) CountedRandomAccessList.empty (the (List Nat) [0,1,2,3,4,5,6])
-       --let ral = the (CountedRandomAccessList Nat) $ CountedRandomAccessList.update 6 ral (const (the Nat 100))
        putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 0 ral
        putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 1 ral
        putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 2 ral
@@ -83,7 +82,4 @@ randomAccessListTests
        putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 4 ral
        putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 5 ral
        putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 6 ral
-       --putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 7 ral
-       --putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 8 ral
-       --putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 9 ral
        pure ()
