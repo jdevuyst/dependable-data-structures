@@ -127,6 +127,7 @@ The above operations are based on a higher order function named `find`. `find` t
 The namespace `Data.RandomAccessList` contains `RandomAccessList` and `CountedRandomAccessList` types. They allow the following operations:
 
 - `cons` for prepending an element
+- `tail` for removing the first element
 - `index` for accessing an element at a specific index
 - `update` for updating an element at a specific index
 

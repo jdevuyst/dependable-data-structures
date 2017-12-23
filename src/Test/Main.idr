@@ -56,7 +56,7 @@ mainTests
        putStrLn $ show $ head $ VectRankedElem.cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
        putStrLn $ show $ Queue.head $ tail queue
        putStrLn $ show $ 1 `elem` binaryTree
-       putStrLn $ show $ the (Maybe Int) $ CountedRandomAccessList.index 2 $ CountedRandomAccessList.update 2 countedRandomAccessList (const (the Int 42))
+       putStrLn $ show $ the (Maybe Int) $ CountedRandomAccessList.index 2 $ CountedRandomAccessList.tail $ CountedRandomAccessList.update 2 countedRandomAccessList (const (the Int 42))
        putStrLn "End"
        pure ()
   where
