@@ -1,4 +1,4 @@
-package data.ipkg
+package data
 
 sourceloc = git@github.com:jdevuyst/idris-data.git
 
