@@ -60,7 +60,7 @@ makeFit {count1} {count2} {relPrf} fitsValue value h1 h2 with (order {to = LTE} 
                Element (Node _ value h2 h1) (FitsNode {prf = relPrf} _ _)
   | (Right _) = Element (Node _ value h1 h2) (FitsNode {prf = relPrf} _ _)
 
-partial
+covering
 mergeHelper : .{constraint : Ordered a rel}
            -> .{value : a}
            -> {count1 : Nat}
