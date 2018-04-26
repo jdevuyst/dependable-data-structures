@@ -12,10 +12,10 @@ mutual
         -> (x : ty)
         -> {leftCnt : Nat}
         -> (l : LazyPairingHeap leftCnt constraint)
-        -> .{leftFits : Fits x l}
+        -> .{auto leftFits : Fits x l}
         -> {rightCnt : Nat}
         -> (r : Lazy $ LazyPairingHeap rightCnt constraint)
-        -> .{rightFits : Fits x r}
+        -> .{auto rightFits : Fits x r}
         -> LazyPairingHeap (S (leftCnt + rightCnt)) constraint
 
   export
@@ -23,24 +23,9 @@ mutual
   findMin (Tree x l r) = x
 
   export
-  data Fits : {constraint : Ordered ty _} -> ty -> LazyPairingHeap _ constraint -> Type where
-    FitsEmpty : {constraint : Ordered ty _}
-             -> (x : ty)
-             -> (h : LazyPairingHeap Z constraint)
-             -> Fits x h
-    FitsTree : {constraint : Ordered ty to}
-            -> (x : ty)
-            -> (h : LazyPairingHeap (S _) constraint)
-            -> {ltePrf : to x (findMin h)}
-            -> Fits x h
-
-fitsSubst : {h1 : LazyPairingHeap (S _) constraint}
-         -> {h2 : LazyPairingHeap (S _) constraint}
-         -> Fits x h1
-         -> findMin h2 = findMin h1
-         -> Fits x h2
-fitsSubst {h2} (FitsTree {ltePrf} x h1) eqPrf
-  = FitsTree {ltePrf = rewrite eqPrf in ltePrf} x h2
+  Fits : {constraint : Ordered ty to} -> ty -> LazyPairingHeap cnt constraint -> Type
+  Fits {cnt = Z} _ _ = ()
+  Fits {cnt = S _} {to} x h = to x (findMin h)
 
 mutual
   link : .{constraint : Ordered ty to}
@@ -48,11 +33,9 @@ mutual
       -> .{cnt2 : Nat} -> (h2 : LazyPairingHeap (S cnt2) constraint)
       -> .{ltePrf : to (findMin h1) (findMin h2)}
       -> (ret : LazyPairingHeap ((S cnt1) + (S cnt2)) constraint ** findMin ret = findMin h1)
-  link {cnt1} {cnt2} {ltePrf} h1@(Tree {leftFits = _} {rightFits} x Empty r) h2
+  link {cnt1} {cnt2} {ltePrf} h1@(Tree x Empty r) h2
     = rewrite plusCommutative cnt1 (S cnt2) in
-      let leftFits = FitsTree {ltePrf} (findMin h1) h2
-          ret = Tree {leftFits} {rightFits} (findMin h1) h2 r in
-          (ret ** Refl)
+      (Tree (findMin h1) h2 r ** Refl)
   link {constraint} {ltePrf} h1 {cnt2} h2 with (h1)
     | Tree {leftFits} {rightFits} {leftCnt} {rightCnt} x l r
       = rewrite sym $ plusAssociative leftCnt rightCnt (S cnt2) in
@@ -61,7 +44,7 @@ mutual
         rewrite plusCommutative leftCnt (S cnt2) in
         rewrite sym $ xFindMin in
         let (merged ** fitsPrf) = merge' {lbound = findMin h1}
-                                         {fits1 = FitsTree {ltePrf = rewrite xFindMin in ltePrf} (findMin h1) h2}
+                                         {fits1 = rewrite xFindMin in ltePrf}
                                          h2
                                          {fits2 = rewrite xFindMin in leftFits}
                                          l
@@ -70,9 +53,7 @@ mutual
                                            merged
                                            {fits2 = rewrite xFindMin in rightFits}
                                            r
-            ret = Tree {leftFits = FitsEmpty (findMin h1) Empty}
-                       {rightFits = fitsPrf'}
-                       (findMin h1) Empty merged' in
+            ret = Tree (findMin h1) Empty merged' in
         (ret ** Refl)
         where xFindMin : findMin h1 = x
               xFindMin = really_believe_me ()
@@ -86,11 +67,11 @@ mutual
   merge' {cnt1} {fits1} h Empty = rewrite plusZeroRightNeutral cnt1 in (h ** fits1)
   merge' {to} {fits1} {fits2} {cnt1 = S n} {cnt2 = S m} h1 h2 with (order {to} (findMin h1) (findMin h2))
     | Left ltePrf = let (ret ** eqPrf) = assert_total $ link {ltePrf} h1 h2 in
-                    (ret ** fitsSubst fits1 eqPrf)
+                    (ret ** rewrite eqPrf in fits1)
     | Right ltePrf = rewrite plusCommutative n (S m) in
                      rewrite plusSuccRightSucc m n in
                      let (ret ** eqPrf) = assert_total $ link {ltePrf} h2 h1 in
-                     (ret ** fitsSubst fits2 eqPrf)
+                     (ret ** rewrite eqPrf in fits2)
 
 export
 merge : .{constraint : Ordered ty to}
@@ -105,19 +86,16 @@ merge {constraint} {ty} {to} {cnt1 = S n} {cnt2 = S m} h1 h2
     where proofs : (lbound : ty ** (Fits lbound h1, Fits lbound h2))
           proofs with (order {to} (findMin h1) (findMin h2))
             | Left ltePrf = let x = findMin h1 in
-                            (x ** (FitsTree {ltePrf = reflexive x} x h1,
-                                   FitsTree {ltePrf} x h2))
+                            (x ** (reflexive x, ltePrf))
             | Right ltePrf = let x = findMin h2 in
-                             (x ** (FitsTree {ltePrf} x h1,
-                                    FitsTree {ltePrf = reflexive x} x h2))
+                             (x ** (ltePrf, reflexive x))
 
 export
 deleteMin : .{constraint : Ordered ty to} -> LazyPairingHeap (S cnt) constraint -> LazyPairingHeap cnt constraint
 deleteMin (Tree _ l r) = merge l r
 
 singleton : {ty : Type} -> {constraint : Ordered ty to} -> ty -> LazyPairingHeap 1 constraint
-singleton x = Tree {leftFits = FitsEmpty x Empty} {rightFits = FitsEmpty x Empty}
-                   x Empty Empty
+singleton x = Tree x Empty Empty
 
 export
 insert : .{constraint : Ordered ty to} -> {cnt : Nat} -> LazyPairingHeap cnt constraint -> ty -> LazyPairingHeap (S cnt) constraint

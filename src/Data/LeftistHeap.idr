@@ -20,13 +20,9 @@ mutual
            -> .{auto rankPrf : n = S $ rank right}
            -> Heap constraint (S $ countLeft + countRight)
 
-  data Fits : {constraint : Ordered a rel} -> a -> Heap constraint _ -> Type where
-       FitsEmpty : {constraint : Ordered a rel}
-                -> (x : a) -> (h : Heap constraint Z)
-                -> Fits x h
-       FitsNode : {constraint : Ordered a rel}
-               -> (x : a) -> (h : Heap constraint (S _)) -> {prf : rel x (findMin h)}
-               -> Fits x h
+  Fits : {constraint : Ordered a rel} -> a -> Heap constraint cnt -> Type
+  Fits {cnt = Z} _ _ = ()
+  Fits {cnt = S _} x h = rel x (findMin h)
 
   rank : Heap _ _ -> Nat
   rank Empty = Z
@@ -40,10 +36,6 @@ export
 empty : Heap _ Z
 empty = Empty
 
-fitsPrf : Fits {rel} value (Node {rankPrf} {leftistPrf} {fitsLeft} {fitsRight} _ value1 _ _)
-       -> rel value value1
-fitsPrf (FitsNode {rel} value (Node {rankPrf} {leftistPrf} {fitsLeft} {fitsRight} _ value1 _ _) {prf}) = prf
-
 makeFit : .{constraint : Ordered a rel}
        -> .(fitsValue : a)
        -> (value : a)
@@ -51,14 +43,14 @@ makeFit : .{constraint : Ordered a rel}
        -> {count2 : Nat}
        -> (h1 : Heap constraint count1)
        -> (h2 : Heap constraint count2)
-       -> .{fits1 : Fits value h1}
-       -> .{fits2 : Fits value h2}
-       -> .{relPrf : rel fitsValue value}
+       -> .{auto fits1 : Fits value h1}
+       -> .{auto fits2 : Fits value h2}
+       -> .{auto relPrf : rel fitsValue value}
        -> Subset (Heap constraint (S $ count1 + count2)) (Fits fitsValue)
 makeFit {count1} {count2} {relPrf} fitsValue value h1 h2 with (order {to = LTE} (rank h1) (rank h2))
   | (Left _) = rewrite plusCommutative count1 count2 in
-               Element (Node _ value h2 h1) (FitsNode {prf = relPrf} _ _)
-  | (Right _) = Element (Node _ value h1 h2) (FitsNode {prf = relPrf} _ _)
+               Element (Node _ value h2 h1) relPrf
+  | (Right _) = Element (Node _ value h1 h2) relPrf
 
 covering
 mergeHelper : .{constraint : Ordered a rel}
@@ -67,24 +59,24 @@ mergeHelper : .{constraint : Ordered a rel}
            -> {count2 : Nat}
            -> (h1 : Heap constraint count1)
            -> (h2 : Heap constraint count2)
-           -> .{fits1 : Fits value h1}
-           -> .{fits2 : Fits value h2}
+           -> .{auto fits1 : Fits value h1}
+           -> .{auto fits2 : Fits value h2}
            -> Subset (Heap constraint (count1 + count2)) (Fits value)
-mergeHelper Empty Empty = Element Empty (FitsEmpty _ _)
+mergeHelper Empty Empty = Element Empty ()
 mergeHelper {fits1} h@(Node {countLeft} {countRight} n _ _ _) Empty = rewrite plusZeroRightNeutral (countLeft + countRight) in Element h fits1
 mergeHelper {fits2} Empty h@(Node {countLeft} {countRight} n _ _ _) = Element h fits2
-mergeHelper {value} {rel} {fits1} {fits2}
-            (Node {countLeft = countLeft1} {countRight = countRight1} {fitsLeft = fitsLeft1} {fitsRight = fitsRight1} _ value1 left1 right1)
-            (Node {countLeft = countLeft2} {countRight = countRight2} {fitsLeft = fitsLeft2} {fitsRight = fitsRight2} _ value2 left2 right2)
+mergeHelper {value} {rel}
+            (Node {countLeft = countLeft1} {countRight = countRight1} _ value1 left1 right1)
+            (Node {countLeft = countLeft2} {countRight = countRight2} _ value2 left2 right2)
   = case order {to = rel} value1 value2 of
     Left orderPrf => rewrite sym $ plusAssociative countLeft1 countRight1 (S $ countLeft2 + countRight2) in
-                     let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value1} {fits1 = fitsRight1} {fits2 = FitsNode {prf = orderPrf} _ _} right1 (Node _ value2 left2 right2) in
-                     makeFit {fits1 = fitsLeft1} {fits2 = fitsMergedHeap} {relPrf = fitsPrf fits1} value value1 left1 mergedHeap
+                     let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value1} right1 (Node _ value2 left2 right2) in
+                     makeFit value value1 left1 mergedHeap
     Right orderPrf => rewrite sym $ plusSuccRightSucc (countLeft1 + countRight1) (countLeft2 + countRight2) in
                       rewrite plusCommutative countLeft2 countRight2 in
                       rewrite plusAssociative (countLeft1 + countRight1) countRight2 countLeft2 in
-                      let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value2} {fits1 = FitsNode {prf = orderPrf} _ _} {fits2 = fitsRight2} (Node _ value1 left1 right1) right2 in
-                      makeFit {fits1 = fitsMergedHeap} {fits2 = fitsLeft2} {relPrf = fitsPrf fits2} value value2 mergedHeap left2
+                      let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value2} (Node _ value1 left1 right1) right2 in
+                      makeFit value value2 mergedHeap left2
 
 export
 merge : .{constraint : Ordered a rel}
@@ -96,9 +88,9 @@ merge {count1} h Empty = rewrite plusZeroRightNeutral count1 in h
 merge Empty h = h
 merge h1@(Node _ _ _ _) h2@(Node _ _ _ _)
   = assert_total $ case order {to = rel} (findMin h1) (findMin h2) of
-    Left orderPrf => case mergeHelper {value = (findMin h1)} h1 h2 {fits1 = FitsNode {prf = reflexive (findMin h1)} _ _} {fits2 = FitsNode {prf = orderPrf} _ _} of
+    Left orderPrf => case mergeHelper {value = (findMin h1)} h1 h2 {fits1 = reflexive (findMin h1)} of
                      Element h _ => h
-    Right orderPrf => case mergeHelper {value = (findMin h2)} h1 h2 {fits1 = FitsNode {prf = orderPrf} _ _} {fits2 = FitsNode {prf = reflexive (findMin h2)} _ _} of
+    Right orderPrf => case mergeHelper {value = (findMin h2)} h1 h2 {fits2 = reflexive (findMin h2)} of
                       Element h _ => h
 
 export
