@@ -2,6 +2,7 @@ module Test.Main
 
 -- contrib
 import Decidable.Order
+import Test.Unit
 
 -- Fast really_believe_me implementation of Ordered for Int
 import Decidable.IntOrder
@@ -82,12 +83,14 @@ mainTests
 export
 randomAccessListTests : IO ()
 randomAccessListTests
-  = do let ral = foldl (flip CountedRandomAccessList.cons) CountedRandomAccessList.empty (the (List Nat) [0,1,2,3,4,5,6])
-       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 0 ral
-       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 1 ral
-       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 2 ral
-       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 3 ral
-       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 4 ral
-       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 5 ral
-       putStrLn $ show $ the (Maybe Nat) $ CountedRandomAccessList.index 6 ral
-       pure ()
+  = do runTests $
+         [ assertEquals (at (n + 1)) Nothing ] ++
+         (flip map) range (\i => assertEquals (at i) $ Just (n `minus` i))
+  where n : Nat
+        n = 6
+        range : List Nat
+        range = [0..n]
+        ral : CountedRandomAccessList Nat
+        ral = foldl (flip cons) CountedRandomAccessList.empty range
+        at : Nat -> Maybe Nat
+        at = (`index` ral)

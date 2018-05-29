@@ -18,3 +18,4 @@ modules = Decidable.IntOrder
         , Data.RandomAccessList
         , Test.Main
 tests = Test.Main.mainTests
+      , Test.Main.randomAccessListTests
