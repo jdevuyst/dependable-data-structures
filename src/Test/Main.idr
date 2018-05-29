@@ -55,7 +55,14 @@ mainTests
        putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
        putStrLn $ show $ head $ VectRankedElem.cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
        putStrLn $ show $ Queue.head $ tail queue
-       putStrLn $ show $ 1 `elem` binaryTree
+
+       -- putStrLn $ show $ 1 `elem` binaryTree
+       -- ^ broken due to https://github.com/idris-lang/Idris-dev/issues/4090
+       -- Nat.LTE alternative:
+       let emptyNatTree = emptyBinaryTree {ty = Nat} {rel = Nat.LTE}
+       let natTree = foldl BinarySearchTree.insert emptyNatTree (the (List Nat) [0, 1, 2])
+       putStrLn $ show $ 1 `elem` natTree
+
        putStrLn $ show $ the (Maybe Int) $ CountedRandomAccessList.index 2 $ CountedRandomAccessList.tail $ CountedRandomAccessList.update 2 countedRandomAccessList (const (the Int 42))
        putStrLn "End"
        pure ()
@@ -68,7 +75,8 @@ mainTests
     emptyPairingHeap = CountedPairingHeap.empty
     queue : Queue 4 Int
     queue = snoc (snoc (snoc (snoc empty 1) 2) 3) 4
-    emptyBinaryTree : {auto constraint : Ordered Int LTE} -> (len : Nat ** BinarySearchTree constraint len)
+    emptyBinaryTree : {default Int ty : Type} -> {default LTE rel : ty -> ty -> Type} ->
+                      {auto constraint : Ordered ty rel} -> (len : Nat ** BinarySearchTree constraint len)
     emptyBinaryTree = (Z ** Empty)
 
 export
