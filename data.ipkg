@@ -1,10 +1,8 @@
 package data
 
-sourceloc = git@github.com:jdevuyst/idris-data.git
+sourceloc = https://github.com/jdevuyst/idris-data
 
-pkgs = contrib
-
-opts = "--warnreach"
+opts = "--warnreach -p contrib"
 
 sourcedir = src
 modules = Decidable.IntOrder

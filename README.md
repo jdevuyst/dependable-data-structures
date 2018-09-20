@@ -135,4 +135,4 @@ These operations take O(log<sub>n</sub>) time. See Okasaki's book for techniques
 
 By construction all accesses and updates to a `RandomAccessList` are proved to be safe.
 
-Usually arrays allow efficient append and prepend is expensive. In `RandomAccessList`, prepend is cheap and append is expensive. The performance of these operations can be swapped by translating all indices. That is, `cons` can be interpreted as an append and access to indices can be translated as follows: `realIndex(virtualIndex) = size - 1 - virtualIndex`,
+Usually arrays allow efficient append and prepend is expensive. In `RandomAccessList`, prepend is cheap and append is expensive. The performance of these operations can be swapped by translating all indices. That is, `cons` can be interpreted as an append and access to indices can be translated as follows: `realIndex(virtualIndex) = size - 1 - virtualIndex`.
