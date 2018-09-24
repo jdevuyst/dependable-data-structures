@@ -1,9 +1,12 @@
 module Data.MergeList
 
+import Rekenaar
+
 import Decidable.Order
 import Data.OrderedVect
 
 %default total
+%language ElabReflection
 
 export
 data MergeList : (rank : Nat) -> (cnt : Nat) -> (constraint : Ordered ty to) -> Type where
@@ -26,12 +29,11 @@ insertVect : {constraint : Ordered ty to}
 insertVect {n} {constraint} {cnt=Z} Nil v
   = rewrite rewriteType in v :: Nil
       where rewriteType : MergeList n n constraint = MergeList n (n + 0) constraint
-            rewriteType = rewrite sym $ plusZeroRightNeutral n in Refl
-insertVect {n} {cnt} (Skip next) v = rewrite plusCommutative cnt n in
+            rewriteType = rewrite the (n = n + 0) (%runElab natPlusRefl) in Refl
+insertVect {n} {cnt} (Skip next) v = rewrite the (cnt + n = n + cnt) (%runElab natPlusRefl) in
                                      v :: next
 insertVect {n} ((::) v next {cnt}) v'
-  = rewrite sym $ plusCommutative cnt n in
-    rewrite sym $ plusAssociative cnt n n in
+  = rewrite the ((n + cnt) + n = cnt + (n + n)) (%runElab natPlusRefl) in
     Skip $ insertVect next (merge n v n v')
 
 export

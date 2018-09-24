@@ -1,8 +1,11 @@
 module Data.RandomAccessList
 
+import Rekenaar
+
 import Data.Fin
 
 %default total
+%language ElabReflection
 
 -- TODO: Use idris-quickcheck to verify that the chosen implementation matches the
 -- behavior of an implementation that uses induction (see comments)
@@ -13,7 +16,7 @@ select : (size1 : Nat) -> {size2 : Nat} -> Fin (size1 + size2) -> Either (Fin si
 --   = case select size1 idx of
 --     Left n => Left $ FS n
 --     Right n => Right n
-select size1 {size2 = Z} idx = Left $ rewrite sym $ plusZeroRightNeutral size1 in idx
+select size1 {size2 = Z} idx = Left $ rewrite the (size1 = size1 + 0) (%runElab natPlusRefl) in idx
 select size1 {size2 = S _} idx
   = let idxInt = finToInteger idx in
     case integerToFin idxInt size1 of
@@ -81,24 +84,24 @@ pow2Lemma Z = Refl
 pow2Lemma (S x)
   = let hyp = pow2Lemma x in
     rewrite sym hyp in
-    rewrite plusZeroRightNeutral (pow2 x + pow2 x) in
+    rewrite the (pow2 x + pow2 x + 0 = pow2 x + pow2 x) (%runElab natPlusRefl) in
     Refl
 
 lteAddLeft : (m, n : Nat) -> LTE n (m + n)
-lteAddLeft m n = rewrite plusCommutative m n in lteAddRight {m} n
+lteAddLeft m n = rewrite the (m + n = n + m) (%runElab natPlusRefl) in lteAddRight {m} n
 
 ltAddRight : (n : Nat) -> {m : Nat} -> LT n (n + (S m))
-ltAddRight n {m} = rewrite sym $ plusSuccRightSucc n m in lteAddRight {m} (S n)
+ltAddRight n {m} = rewrite the (n + S m = S (n + m)) (%runElab natPlusRefl) in lteAddRight {m} (S n)
 
 lteAddBoth : {x, y, x', y' : Nat} -> LTE x y -> LTE x' y' -> LTE (x + x') (y + y')
 lteAddBoth {x' = S _} {y' = Z} _ _ impossible
 lteAddBoth {x} {y} {x' = Z} {y'} smaller _
-  = rewrite plusZeroRightNeutral x in
+  = rewrite the (x + 0 = x) (%runElab natPlusRefl) in
     lteTransitive smaller (lteAddRight y)
 lteAddBoth {x} {y} {x' = S x''} {y' = S y''} smaller smaller'
   = let ind = lteAddBoth smaller (fromLteSucc smaller') in
-    rewrite sym $ plusSuccRightSucc x x'' in
-    rewrite sym $ plusSuccRightSucc y y'' in
+    rewrite the (x + (S x'') = S (x + x'')) (%runElab natPlusRefl) in
+    rewrite the (y + (S y'') = S (y + y'')) (%runElab natPlusRefl) in
     LTESucc ind
 
 pow2Monotone : {n, m : Nat} -> LTE n m -> LTE (pow2 n) (pow2 m)
@@ -115,13 +118,12 @@ pow2Monotone {n = S n'} {m = S m'} smaller
 minusPlusNeutral : (x, y : Nat) -> LTE y x -> (x - y) + y = x
 minusPlusNeutral x Z _
   = replace {P = \var => var = x}
-            (sym $ plusZeroRightNeutral (x `minus` Z))
+            (the (x `minus` Z = (x `minus` Z) + Z) (%runElab natPlusRefl))
             (minusZeroRight x)
 minusPlusNeutral Z (S _) _ impossible
 minusPlusNeutral (S x) (S y) prf
-  = let ind = minusPlusNeutral x y (fromLteSucc prf)
-        succPrf = plusSuccRightSucc (x `minus` y) y in
-    rewrite sym succPrf in
+  = let ind = minusPlusNeutral x y (fromLteSucc prf) in
+    rewrite the ((x `minus` y) + (S y) = S ((x `minus` y) + y)) (%runElab natPlusRefl) in
     cong {f = S} ind
 
 plusMinusAssociative : (a, b, c : Nat) -> {auto smaller : LTE c b} -> a + (b `minus` c) = (a + b) `minus` c
@@ -134,7 +136,7 @@ plusMinusAssociative a (S b) (S c) {smaller}
   = let ind = plusMinusAssociative {smaller = fromLteSucc smaller} a b c
         succPrf = sym $ minusSuccSucc (a + b) c
         p = \x => (a + b) `minus` c = x `minus` (S c)
-        succPrf' = replace {P = p} (plusSuccRightSucc a b) succPrf in
+        succPrf' = replace {P = p} (the (S (a + b) = a + S b) (%runElab natPlusRefl)) succPrf in
     replace {P = \x => a + (b `minus` c) = x} succPrf' ind
 
 lteReflAddLeftContra : LTE (x + S y) x -> Void
@@ -144,9 +146,7 @@ lteReflAddLeftContra (LTESucc {left = S x + S y} {right = S x} prf) = absurd $ l
 
 treeListCons : {tPos, pos : Nat} -> Tree (pow2 tPos) ty -> TreeList pos size ty -> .{auto fits : LTE tPos pos}
                -> (newPos : Nat ** TreeList newPos (size + (pow2 tPos)) ty)
-treeListCons {ty} {tPos} t Nil = rewrite plusCommutative Z (pow2 tPos) in
-                                 rewrite plusZeroRightNeutral (pow2 tPos) in
-                                 let nil = replace {P = \x => TreeList (S tPos) x ty}
+treeListCons {ty} {tPos} t Nil = let nil = replace {P = \x => TreeList (S tPos) x ty}
                                                    (minusZeroN (pow2 tPos))
                                                    RandomAccessList.Nil
                                      ts' = (::) {nextPos = S tPos} {posPrf = lteRefl} {smaller = lteRefl} t nil in
@@ -156,12 +156,13 @@ treeListCons {tPos} {pos} {size} t' ((::) {smaller} t ts) {fits} {ty}
     CmpEQ => let merged = Merged t' t
                  merged' = replace {P = \x => Tree x ty} (pow2Lemma tPos) merged
                  (newPos ** ts') = treeListCons {tPos = S tPos} merged' ts in
-             rewrite sym $ plusZeroRightNeutral (pow2 tPos) in
              rewrite sym $ minusPlusNeutral size (pow2 tPos) $
                      lteTransitive (pow2Monotone fits) smaller in
-             rewrite sym $ plusAssociative (size `minus` pow2 tPos) (pow2 tPos) (pow2 tPos + Z) in
+             rewrite the (plus (plus (minus size (power 2 tPos)) (power 2 tPos)) (power 2 tPos)
+                         = plus (minus size (power 2 tPos)) (plus (power 2 tPos) (plus (power 2 tPos) 0)))
+                     (%runElab natPlusRefl) in
              (newPos ** ts')
-    CmpLT diff => let p = plusZeroRightNeutral size
+    CmpLT diff => let p = the (size + 0 = size) (%runElab natPlusRefl)
                       p' = minusZeroN $ pow2 tPos
                       p'' = replace {P = \x => size + x = size} p' p
                       p''' = replace {P = \x => x = size} (plusMinusAssociative {smaller = lteRefl} size (pow2 tPos) (pow2 tPos)) p''
@@ -197,7 +198,7 @@ treeListTailHelper {ty} {size} {tPos = S pos'} t {tsPos} {posPrf} ts
     case t' of
       Singleton _ => void $ notSingleton eqPrf
       Merged {halfSize} l r =>
-        let eqPrf' = replace {P = \y => halfSize + halfSize = pow2 pos' + y} (plusZeroRightNeutral $ pow2 pos') eqPrf
+        let eqPrf' = replace {P = \y => halfSize + halfSize = pow2 pos' + y} (the (pow2 pos' + 0 = pow2 pos') (%runElab natPlusRefl)) eqPrf
             l' = replace {P = \x => Tree x ty} (halve eqPrf') l
             r' = replace {P = \x => Tree x ty} (halve eqPrf') r
             p = plusZeroRightNeutral size
@@ -206,9 +207,7 @@ treeListTailHelper {ty} {size} {tPos = S pos'} t {tsPos} {posPrf} ts
             p''' = replace {P = \x => x = size} (plusMinusAssociative {smaller = lteRefl} size (pow2 pos') (pow2 pos')) p''
             ts' = replace {P = \x => TreeList tsPos x ty} (sym p''') ts
             ts'' = RandomAccessList.(::) {posPrf} {smaller = lteAddLeft size (pow2 pos')} r' ts' in
-        rewrite plusZeroRightNeutral (pow2 pos') in
-        rewrite sym $ plusAssociative (pow2 pos') (pow2 pos') size in
-        rewrite plusCommutative (pow2 pos') size in
+        rewrite the (pow2 pos' + (pow2 pos' + 0) + size = pow2 pos' + (size + pow2 pos')) (%runElab natPlusRefl) in
         treeListTailHelper {posPrf = lteRefl} l' ts''
     where eraseSize : {n : Nat} -> Tree n ty -> (n' : Nat ** (Tree n' ty, n' = n))
           eraseSize t = (_ ** (t, Refl))
@@ -219,15 +218,15 @@ treeListTailHelper {ty} {size} {tPos = S pos'} t {tsPos} {posPrf} ts
           halve {x = S x'} {y = S y'} prf = cong {f = S} $ halve prev
             where prev : x' + x' = y' + y'
                   prev = let prf' = replace {P = \var => var = S (S y' + y')}
-                                            (sym $ plusSuccRightSucc (S x') x') $
+                                            (the (S x' + S x' = S (S x' + x')) (%runElab natPlusRefl)) $
                                     replace {P = \var => S x' + S x' = var}
-                                            (sym $ plusSuccRightSucc (S y') y')
+                                            (the (S y' + S y' = S (S y' + y')) (%runElab natPlusRefl)) $
                                             prf in
                          cong {f = Nat.pred . Nat.pred} prf'
           notSingleton : {n : Nat} -> 1 = (pow2 n) + (pow2 n + Z) -> Void
           notSingleton {n} eq
             = let eq' = replace {P = \var => 1 = pow2 n + var}
-                                (plusZeroRightNeutral $ pow2 n)
+                                (the (pow2 n + Z = pow2 n) (%runElab natPlusRefl))
                                 eq
                   lte = pow2StrictlyPositive n
                   lte' = lteAddBoth lte lte in
@@ -238,11 +237,11 @@ treeListTail {ty} {pos} {size} ((::) {posPrf} t ts)
   = let (newPos ** newList) = treeListTailHelper {posPrf = lteSuccLeft posPrf} t ts
         p = plusMinusAssociative (pow2 pos) (S size) (pow2 pos)
         newList' = replace {P = \x => TreeList newPos (x `minus` 1) ty} p newList
-        p' = plusCommutative (pow2 pos) (S size)
+        p' = the (pow2 pos + S size = S size + pow2 pos) (%runElab natPlusRefl)
         newList'' = replace {P = \x => TreeList newPos ((x `minus` pow2 pos) `minus` 1) ty} p' newList'
         p'' = sym $ plusMinusAssociative {smaller = lteRefl} (S size) (pow2 pos) (pow2 pos)
         newList''' = replace {P = \x => TreeList newPos (x `minus` 1) ty} p'' newList'' in
-    rewrite sym $ plusZeroRightNeutral size in
+    rewrite the (size = size + 0) (%runElab natPlusRefl) in
     rewrite minusZeroN $ pow2 pos in
     rewrite sym $ minusZeroRight (size + (pow2 pos `minus` pow2 pos)) in
     (newPos ** newList''')
@@ -260,7 +259,7 @@ namespace RandomAccessList
   cons : ty -> RandomAccessList size ty -> RandomAccessList (S size) ty
   cons {size} x (pos ** l)
     = let (pos' ** l') = treeListCons (Singleton x) l in
-      rewrite plusCommutative (S Z) size in
+      rewrite the (S Z + size = size + S Z) (%runElab natPlusRefl) in
       (pos' ** l')
 
   export

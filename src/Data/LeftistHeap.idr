@@ -1,8 +1,11 @@
 module Data.LeftistHeap
 
+import Rekenaar
+
 import Decidable.Order
 
 %default total
+%language ElabReflection
 
 mutual
   export
@@ -48,7 +51,7 @@ makeFit : .{constraint : Ordered a rel}
        -> .{auto relPrf : rel fitsValue value}
        -> Subset (Heap constraint (S $ count1 + count2)) (Fits fitsValue)
 makeFit {count1} {count2} {relPrf} fitsValue value h1 h2 with (order {to = LTE} (rank h1) (rank h2))
-  | (Left _) = rewrite plusCommutative count1 count2 in
+  | (Left _) = rewrite the (count1 + count2 = count2 + count1) (%runElab natPlusRefl) in
                Element (Node _ value h2 h1) relPrf
   | (Right _) = Element (Node _ value h1 h2) relPrf
 
@@ -63,18 +66,20 @@ mergeHelper : .{constraint : Ordered a rel}
            -> .{auto fits2 : Fits value h2}
            -> Subset (Heap constraint (count1 + count2)) (Fits value)
 mergeHelper Empty Empty = Element Empty ()
-mergeHelper {fits1} h@(Node {countLeft} {countRight} n _ _ _) Empty = rewrite plusZeroRightNeutral (countLeft + countRight) in Element h fits1
+mergeHelper {fits1} h@(Node {countLeft} {countRight} n _ _ _) Empty = rewrite the ((countLeft + countRight) + 0 = countLeft + countRight) (%runElab natPlusRefl) in Element h fits1
 mergeHelper {fits2} Empty h@(Node {countLeft} {countRight} n _ _ _) = Element h fits2
 mergeHelper {value} {rel}
             (Node {countLeft = countLeft1} {countRight = countRight1} _ value1 left1 right1)
             (Node {countLeft = countLeft2} {countRight = countRight2} _ value2 left2 right2)
   = case order {to = rel} value1 value2 of
-    Left orderPrf => rewrite sym $ plusAssociative countLeft1 countRight1 (S $ countLeft2 + countRight2) in
+    Left orderPrf => rewrite the (S (plus (plus countLeft1 countRight1) (S (plus countLeft2 countRight2)))
+                                 = S (countLeft1 + (countRight1 + S (countLeft2 + countRight2))))
+                             (%runElab natPlusRefl) in
                      let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value1} right1 (Node _ value2 left2 right2) in
                      makeFit value value1 left1 mergedHeap
-    Right orderPrf => rewrite sym $ plusSuccRightSucc (countLeft1 + countRight1) (countLeft2 + countRight2) in
-                      rewrite plusCommutative countLeft2 countRight2 in
-                      rewrite plusAssociative (countLeft1 + countRight1) countRight2 countLeft2 in
+    Right orderPrf => rewrite the (S (plus (plus countLeft1 countRight1) (S (plus countLeft2 countRight2)))
+                                  = S (S (countLeft1 + countRight1) + countRight2 + countLeft2))
+                              (%runElab natPlusRefl) in
                       let (Element mergedHeap fitsMergedHeap) = mergeHelper {value = value2} (Node _ value1 left1 right1) right2 in
                       makeFit value value2 mergedHeap left2
 
@@ -84,7 +89,7 @@ merge : .{constraint : Ordered a rel}
      -> (h1 : Heap constraint count1) -> (h2 : Heap constraint count2)
      -> Heap constraint (count1 + count2)
 merge Empty Empty = Empty
-merge {count1} h Empty = rewrite plusZeroRightNeutral count1 in h
+merge {count1} h Empty = rewrite the (count1 + 0 = count1) (%runElab natPlusRefl) in h
 merge Empty h = h
 merge h1@(Node _ _ _ _) h2@(Node _ _ _ _)
   = assert_total $ case order {to = rel} (findMin h1) (findMin h2) of

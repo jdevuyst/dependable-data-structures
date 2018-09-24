@@ -1,10 +1,13 @@
 module Data.Queue
 
+import Rekenaar
+
 import Data.Vect
 import Data.VectRankedElem
 import Decidable.Order
 
 %default total
+%language ElabReflection
 
 export
 data Queue : (size : Nat) -> (ty : Type) -> Type where
@@ -38,7 +41,7 @@ lteAddRightLemma : LTE r c -> LTE r (l + c)
 lteAddRightLemma {l} {r} {c} smaller
   = lteTransitive smaller cLTElc
     where cLTElc : LTE c (l + c)
-          cLTElc = rewrite plusCommutative l c in
+          cLTElc = rewrite the (l + c = c + l) (%runElab natPlusRefl) in
                    lteAddRight {m = l} c
 
 minusPlusEqualsPlusMinus : (l, c, r: Nat) -> LTE r c -> LTE r (l + c) -> (l + c) - r = l + (c - r)
@@ -48,7 +51,7 @@ minusPlusEqualsPlusMinus (S _) (S _) Z _ _ = Refl
 minusPlusEqualsPlusMinus _ Z (S _) _ _ impossible
 minusPlusEqualsPlusMinus l (S c) (S r) smaller _
   = let smaller' = fromLteSucc smaller in
-    rewrite sym $ plusSuccRightSucc l c in
+    rewrite the (l + S c = S (l + c)) (%runElab natPlusRefl) in
     minusPlusEqualsPlusMinus l c r smaller' (lteAddRightLemma smaller')
 
 make_ : {n : Nat}
@@ -62,7 +65,7 @@ make_ {n} f {m} r with (order {to = LTE} m n)
   | Left _ = (MkQueue f r ** (FrontElem, BackElem))
   | Right _ = let (reversed ** rProj) = rev_ r
                   (f' ** (fProj, reversedProj)) = f `concat_` reversed in
-              rewrite sym $ plusZeroRightNeutral (n + m) in
+              rewrite the (n + m = n + m + 0) (%runElab natPlusRefl) in
               (MkQueue f' [] ** (FrontElem . fProj,
                                  rewrite plusZeroRightNeutral (n + m) in
                                  FrontElem . (proj $ reversedProj . rProj)))
@@ -81,7 +84,7 @@ snoc_ : (q : Queue size ty) -> (x : ty)
      -> (ret : Queue (S size) ty
          ** ({x : ty} -> {idx : Nat} -> RankedElem x q idx -> RankedElem x ret idx,
              RankedElem x ret size))
-snoc_ (MkQueue {n} f {m} r) x = rewrite plusSuccRightSucc n m in
+snoc_ (MkQueue {n} f {m} r) x = rewrite the (S (n + m) = n + S m) (%runElab natPlusRefl) in
                                 let (ret ** (fProj, rProj)) = make_ f (x::r) in
                                 (ret ** ((\el => case el of
                                                  (FrontElem el) => fProj el
@@ -93,7 +96,7 @@ snoc_ (MkQueue {n} f {m} r) x = rewrite plusSuccRightSucc n m in
                                 where lemma : (l, c, r : Nat) -> l + S c `minus` S r = l + c `minus` r
                                       lemma Z Z _ = Refl
                                       lemma Z (S _) _ = Refl
-                                      lemma (S l) c r = rewrite plusSuccRightSucc l c in Refl
+                                      lemma (S l) c r = rewrite the (S (l + c) = l + S c) (%runElab natPlusRefl) in Refl
 
 export
 snoc : Queue size ty -> ty -> Queue (S size) ty

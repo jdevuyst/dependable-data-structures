@@ -2,7 +2,7 @@ package data
 
 sourceloc = https://github.com/jdevuyst/idris-data
 
-opts = "--warnreach -p contrib"
+opts = "--warnreach -p contrib -p rekenaar"
 
 sourcedir = src
 modules = Decidable.IntOrder

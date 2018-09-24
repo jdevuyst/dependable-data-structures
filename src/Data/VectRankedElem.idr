@@ -1,9 +1,12 @@
 module VectRankedElem
 
+import Rekenaar
+
 import Data.Vect
 import Decidable.Order
 
 %default total
+%language ElabReflection
 
 public export
 data RankedElem : ty -> Vect _ ty -> (idx : Nat) -> Type where
@@ -42,7 +45,7 @@ concat_ : {size1, size2 : Nat}
            ** ({a : ty} -> {n : Nat} -> RankedElem a v1 n -> RankedElem a ret n,
                {a : ty} -> {n : Nat} -> RankedElem a v2 n -> RankedElem a ret (size1 + n)))
 concat_ [] ys = (ys ** (absurd, id))
-concat_ {size1} xs [] = rewrite plusZeroRightNeutral size1 in
+concat_ {size1} xs [] = rewrite the (size1 + 0 = size1) (%runElab natPlusRefl) in
                         (xs ** (id, absurd))
 concat_ (x::xs) (y::ys) = let (ret ** (f, g)) = xs `concat_` (y::ys) in
                           (x :: ret ** (ff f, gg g))
@@ -64,7 +67,7 @@ export
 rev_ : {size : Nat} -> (orig : Vect size ty)
     -> (ret : Vect size ty ** {a : ty} -> {n : Nat} -> RankedElem a orig n -> RankedElem a ret (size `minus` (S n)))
 rev_ [] = ([] ** absurd)
-rev_ ((::) {len} x xs) = rewrite plusCommutative 1 len in
+rev_ ((::) {len} x xs) = rewrite the (1 + len = len + 1) (%runElab natPlusRefl) in
                          let (sx ** h) = rev_ xs
                              (ret ** (f, g)) = sx `concat_` [x] in
                          (ret ** fgh f g h)
@@ -73,7 +76,7 @@ rev_ ((::) {len} x xs) = rewrite plusCommutative 1 len in
                                   -> ({a : ty} -> {n : Nat} -> RankedElem a xs n -> RankedElem a sx (len `minus` (S n)))
                                   -> {a : ty} -> {n : Nat} -> RankedElem a (x::xs) n -> RankedElem a ret (len `minus` n)
                                fgh f g h Here = rewrite minusZeroRight len in
-                                                rewrite sym $ plusZeroRightNeutral len in
+                                                rewrite the (len = len + 0) (%runElab natPlusRefl) in
                                                 g Here
                                fgh f g h (There elem) = f $ h elem
 

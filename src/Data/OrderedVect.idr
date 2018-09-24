@@ -1,8 +1,11 @@
 module Data.OrderedVect
 
+import Rekenaar
+
 import Decidable.Order
 
 %default total
+%language ElabReflection
 
 mutual
   public export
@@ -42,8 +45,7 @@ mutual
   merge' {to} [x] [y] = case order {to} x y of
                         Left prf => ([x, y] ** Left (reflexive x))
                         Right prf => ([y, x] ** Right (reflexive y))
-  merge' {m} [x] (y :: ys) = rewrite sym $ plusZeroRightNeutral m in
-                             rewrite plusSuccRightSucc m Z in
+  merge' {m} [x] (y :: ys) = rewrite the (S m = m + 1) (%runElab natPlusRefl) in
                              case assert_total $ merge' (y :: ys) [x] of
                              (ref ** Left prf) => (ref ** Right prf)
                              (ref ** Right prf) => (ref ** Left prf)
@@ -51,8 +53,7 @@ mutual
     = case order {to} x y of
       Left prf => case mergeHelper xs [y] x of
                   (zs ** fitsPrf) => (zs ** Left fitsPrf)
-      Right prf => rewrite sym $ plusSuccRightSucc cntX Z in
-                   rewrite plusZeroRightNeutral cntX in
+      Right prf => rewrite the (cntX + 1 = S cntX) (%runElab natPlusRefl) in
                    ((y :: x :: xs) ** Right (reflexive y))
   merge' ((::) {n = S cntX} x (x' :: xs'))
         ((::) {n = S cntY} y (y' :: ys'))
@@ -60,9 +61,7 @@ mutual
       Left prf => case mergeHelper (x' :: xs') (y :: y' :: ys') x of
                   (zs ** fitsPrf) => (zs ** Left fitsPrf)
       Right prf => case mergeHelper (y' :: ys') (x :: x' :: xs') y of
-                   (zs ** fitsPrf) => rewrite plusCommutative cntX (S $ S $ cntY) in
-                                      rewrite plusSuccRightSucc (S $ S cntY) cntX in
-                                      rewrite plusSuccRightSucc (S cntY) (S cntX) in
+                   (zs ** fitsPrf) => rewrite the (cntX + S (S cntY) = cntY + S (S cntX)) (%runElab natPlusRefl) in
                                       (zs ** Right fitsPrf)
   mergeHelper : .{constraint : Ordered ty to}
              -> {n : Nat}
@@ -88,7 +87,7 @@ merge : {constraint : Ordered ty to}
      -> OrderedVect m constraint
      -> OrderedVect (n + m) constraint
 merge Z     [] Z     [] = Nil
-merge n     v1 Z     [] = rewrite plusZeroRightNeutral n in v1
+merge n     v1 Z     [] = rewrite the (n + 0 = n) (%runElab natPlusRefl) in v1
 merge Z     [] _     v2 = v2
 merge (S _) v1 (S _) v2 = fst $ merge' v1 v2
 
