@@ -10,6 +10,8 @@ Notably missing:
 
 For now these are left as a proverbial 'exercise for the reader'.
 
+The code in this repository requires Idris 1.3.x.
+
 # Table of Contents
 
 * [Data Structures for Idris](#data-structures-for-idris)
