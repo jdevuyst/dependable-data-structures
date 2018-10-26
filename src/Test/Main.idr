@@ -52,13 +52,20 @@ mainTests
        putStrLn "Results: "
        putStrLn $ show $ findMin $ deleteMin leftistHeap
        putStrLn $ show $ count $ leftistHeap
-       putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
+
+       -- putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList
+       -- ^ broken on Idris 1.3.1, works on 1.3.0
+       -- A more modest alternative:
+       let mergeList' = foldl CountedMergeList.insert emptyMergeList $ take 1000 l
+       putStrLn $ show $ CountedOrderedVect.head $ tail $ toVect mergeList'
+
        putStrLn $ show $ CountedPairingHeap.findMin $ deleteMin pairingHeap
        putStrLn $ show $ head $ VectRankedElem.cons 0 $ rev $ [1, 2, 3] `concat` [4, 5]
        putStrLn $ show $ Queue.head $ tail queue
 
        -- putStrLn $ show $ 1 `elem` binaryTree
-       -- ^ broken due to https://github.com/idris-lang/Idris-dev/issues/4090
+       -- ^ broken on Idris 1.3.0, works on 1.3.1
+       -- See https://github.com/idris-lang/Idris-dev/issues/4090
        -- Nat.LTE alternative:
        let emptyNatTree = emptyBinaryTree {ty = Nat} {rel = Nat.LTE}
        let natTree = foldl BinarySearchTree.insert emptyNatTree (the (List Nat) [0, 1, 2])
