@@ -1,4 +1,4 @@
-# Data Structures for Idris
+# Data Structures for Idris 1
 
 Experiments in implementing data structures in the dependently typed programming language [Idris](https://www.idris-lang.org).
 
@@ -10,7 +10,7 @@ Notably missing:
 
 For now these are left as a proverbial 'exercise for the reader'.
 
-The code in this repository requires Idris 1.3.x.
+The code in this repository requires Idris 1.3.x (last tested on Idris 1.3.1). Given the experimental nature of this project, an Idris 2 port is not planned for.
 
 # Table of Contents
 
